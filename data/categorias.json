@@ -1,0 +1,29 @@
+{
+    "nombreApp": "Atención Ciudadana",
+    "categorias": [
+        {
+            "ruta": "cuneta",
+            "icon": "water_damage",
+            "texto": "Cuneta sucia",
+            "descripcion": "Cunetas tapadas o con agua estancada"
+        },
+        {
+            "ruta": "bache",
+            "icon": "add_road",
+            "texto": "Bache",
+            "descripcion": "Pozos o calles rotas"
+        },
+        {
+            "ruta": "luminaria",
+            "icon": "lightbulb",
+            "texto": "Luminaria rota",
+            "descripcion": "Luces de la calle apagadas o dañadas"
+        },
+        {
+            "ruta": "basura",
+            "icon": "delete",
+            "texto": "Basura acumulada",
+            "descripcion": "Residuos en la vereda o baldíos"
+        }
+    ]
+}
