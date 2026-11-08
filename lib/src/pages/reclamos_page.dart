@@ -1,3 +1,4 @@
+import 'package:atencion_ciudadana/src/widgets/boton_cerrar_sesion.dart';
 import 'package:flutter/material.dart';
 
 import 'package:atencion_ciudadana/src/providers/categorias_provider.dart';
@@ -14,18 +15,7 @@ class ReclamosPage extends StatelessWidget {
     return Scaffold(
       appBar: AppBar(
         title: const Text('¿Qué querés reportar?'),
-        actions: [
-          // Cerrar sesión: vuelvo a la HomePage y borro el historial de pantallas
-          IconButton(
-            icon: const Icon(Icons.logout),
-            tooltip: 'Cerrar sesión',
-            onPressed: () => Navigator.pushNamedAndRemoveUntil(
-              context,
-              '/',
-              (route) => false,
-            ),
-          ),
-        ],
+        actions: const [BotonCerrarSesion()],
       ),
       body: _lista(),
     );

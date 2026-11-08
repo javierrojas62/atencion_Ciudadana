@@ -1,3 +1,5 @@
+import 'package:atencion_ciudadana/src/pages/admin_page.dart';
+import 'package:atencion_ciudadana/src/pages/operario_page.dart';
 import 'package:flutter/material.dart';
 
 import 'package:atencion_ciudadana/src/pages/home_page.dart';
@@ -22,5 +24,7 @@ Map<String, WidgetBuilder> getAplicationRoutes() {
         const ReclamoPage(categoria: 'Luminaria rota'),
     'basura': (BuildContext context) =>
         const ReclamoPage(categoria: 'Basura acumulada'),
+    'operario': (BuildContext context) => const OperarioPage(),
+    'admin': (BuildContext context) => const AdminPage(),
   };
 }

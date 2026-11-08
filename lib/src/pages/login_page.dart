@@ -1,3 +1,4 @@
+import 'package:atencion_ciudadana/src/models/auth_provider.dart';
 import 'package:flutter/material.dart';
 
 // Pantalla de inicio de sesión.
@@ -11,10 +12,6 @@ class LoginPage extends StatefulWidget {
 }
 
 class _LoginPageState extends State<LoginPage> {
-  // Usuario de prueba (harcodeado hasta tener el backend)
-  final String _emailValido = 'vecino@gmail.com';
-  final String _passwordValido = '123456';
-
   // Key del formulario para poder validar todos los campos juntos
   final _formKey = GlobalKey<FormState>();
 
@@ -143,35 +140,39 @@ class _LoginPageState extends State<LoginPage> {
 
     setState(() => _cargando = true);
 
-    // Simulo la espera de la respuesta del servidor
-    await Future.delayed(const Duration(seconds: 1));
+    try {
+      final perfil = await authProvider.iniciarSesion(
+        _emailController.text.trim(),
+        _passwordController.text,
+      );
 
-    // Chequeo que la pantalla siga abierta antes de usar el context
-    if (!mounted) return;
-    setState(() => _cargando = false);
-
-    // TODO: reemplazar por la llamada a la API de Laravel
-    if (_emailController.text.trim() == _emailValido &&
-        _passwordController.text == _passwordValido) {
-      // Uso pushReplacementNamed para que con "atrás" no vuelva al login
-      Navigator.pushReplacementNamed(context, 'reclamos');
-    } else {
-      _mostrarAlerta();
+      if (!mounted) return;
+      // Voy a la pantalla de su rol y borro el historial,
+      // así con "atrás" no vuelve al login
+      Navigator.pushNamedAndRemoveUntil(
+        context,
+        perfil.rutaInicio,
+        (route) => false,
+      );
+    } on LoginException catch (e) {
+      if (!mounted) return;
+      _mostrarAlerta(e.mensaje);
+    } finally {
+      if (mounted) setState(() => _cargando = false);
     }
   }
 
-  // Alerta cuando el usuario o la contraseña no coinciden
-  void _mostrarAlerta() {
+  // Alerta con el motivo por el que no pudo entrar
+  void _mostrarAlerta(String mensaje) {
     showDialog(
       context: context,
-      barrierDismissible: true,
       builder: (context) {
         return AlertDialog(
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(20.0),
           ),
           title: const Text('No se pudo ingresar'),
-          content: const Text('El email o la contraseña son incorrectos.'),
+          content: Text(mensaje),
           actions: [
             TextButton(
               onPressed: () => Navigator.of(context).pop(),
