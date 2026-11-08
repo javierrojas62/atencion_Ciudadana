@@ -81,7 +81,22 @@ android/
   build.gradle.kts
   gradle.properties
   settings.gradle.kts
+data/
+  categorias.json
 lib/
+  src/
+    pages/
+      home_page.dart
+      login_page.dart
+      reclamo_page.dart
+      reclamos_page.dart
+    providers/
+      categorias_provider.dart
+    routes/
+      routes.dart
+    utils/
+      icono_string_util.dart
+    app.dart
   main.dart
 web/
   icons/
@@ -393,20 +408,704 @@ plugins {
 include(":app")
 </file>
 
-<file path="lib/main.dart">
+<file path="data/categorias.json">
+{
+    "nombreApp": "Atención Ciudadana",
+    "categorias": [
+        {
+            "ruta": "cuneta",
+            "icon": "water_damage",
+            "texto": "Cuneta sucia",
+            "descripcion": "Cunetas tapadas o con agua estancada"
+        },
+        {
+            "ruta": "bache",
+            "icon": "add_road",
+            "texto": "Bache",
+            "descripcion": "Pozos o calles rotas"
+        },
+        {
+            "ruta": "luminaria",
+            "icon": "lightbulb",
+            "texto": "Luminaria rota",
+            "descripcion": "Luces de la calle apagadas o dañadas"
+        },
+        {
+            "ruta": "basura",
+            "icon": "delete",
+            "texto": "Basura acumulada",
+            "descripcion": "Residuos en la vereda o baldíos"
+        }
+    ]
+}
+</file>
+
+<file path="lib/src/pages/home_page.dart">
 import 'package:flutter/material.dart';
 
-void main() {
-  runApp(const MainApp());
+// Página principal (bienvenida).
+// Es lo primero que ve el usuario al abrir la app: explica de qué se trata
+// y le da las opciones de iniciar sesión o registrarse.
+class HomePage extends StatefulWidget {
+  const HomePage({super.key});
+
+  @override
+  State<HomePage> createState() => _HomePageState();
 }
 
-class MainApp extends StatelessWidget {
-  const MainApp({super.key});
+class _HomePageState extends State<HomePage> {
+  // Categorías de reclamos que se van a poder reportar.
+  // Las muestro acá como chips para que el vecino vea qué tipo de problemas puede cargar.
+  final List<Map<String, dynamic>> _categorias = [
+    {'nombre': 'Cunetas', 'icono': Icons.water_damage},
+    {'nombre': 'Baches', 'icono': Icons.add_road},
+    {'nombre': 'Luminarias', 'icono': Icons.lightbulb},
+    {'nombre': 'Basura', 'icono': Icons.delete},
+  ];
 
   @override
   Widget build(BuildContext context) {
-    return const MaterialApp(
-      home: Scaffold(body: Center(child: Text('Hello World!'))),
+    final colores = Theme.of(context).colorScheme;
+
+    return Scaffold(
+      // SafeArea para que no se meta el contenido debajo de la barra de estado
+      body: SafeArea(
+        child: SingleChildScrollView(
+          padding: const EdgeInsets.all(24),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              const SizedBox(height: 40),
+
+              // Logo provisorio con un ícono hasta tener uno propio
+              CircleAvatar(
+                radius: 50,
+                backgroundColor: colores.primaryContainer,
+                child: Icon(
+                  Icons.location_city,
+                  size: 56,
+                  color: colores.primary,
+                ),
+              ),
+              const SizedBox(height: 24),
+
+              Text(
+                'Atención Ciudadana',
+                textAlign: TextAlign.center,
+                style: Theme.of(context).textTheme.headlineMedium?.copyWith(
+                  fontWeight: FontWeight.bold,
+                  color: colores.primary,
+                ),
+              ),
+              const SizedBox(height: 12),
+
+              const Text(
+                'Reportá problemas en la vía pública de tu barrio. '
+                'Sacá una foto, mandá tu ubicación y seguí el estado '
+                'de tu reclamo hasta que se resuelva.',
+                textAlign: TextAlign.center,
+                style: TextStyle(fontSize: 16),
+              ),
+              const SizedBox(height: 32),
+
+              // Chips con las categorías. Uso Wrap para que si no entran en
+              // una fila pasen solas a la siguiente.
+              Wrap(
+                alignment: WrapAlignment.center,
+                spacing: 8,
+                runSpacing: 8,
+                children: _categorias
+                    .map(
+                      (cat) => Chip(
+                        avatar: Icon(cat['icono'], size: 18),
+                        label: Text(cat['nombre']),
+                      ),
+                    )
+                    .toList(),
+              ),
+              const SizedBox(height: 48),
+
+              // Botón principal: va a la pantalla de login (ruta definida en routes.dart)
+              FilledButton(
+                style: FilledButton.styleFrom(
+                  padding: const EdgeInsets.symmetric(vertical: 16),
+                ),
+                onPressed: () => Navigator.pushNamed(context, 'login'),
+                child: const Text('Iniciar sesión'),
+              ),
+              const SizedBox(height: 12),
+
+              // El registro lo hago en el próximo paso, por ahora solo aviso
+              OutlinedButton(
+                style: OutlinedButton.styleFrom(
+                  padding: const EdgeInsets.symmetric(vertical: 16),
+                ),
+                onPressed: () {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(content: Text('Registro próximamente')),
+                  );
+                },
+                child: const Text('Registrarme'),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+}
+</file>
+
+<file path="lib/src/pages/login_page.dart">
+import 'package:flutter/material.dart';
+
+// Pantalla de inicio de sesión.
+// Por ahora el usuario está harcodeado acá. Cuando tenga la API en Laravel
+// esto se reemplaza por el POST al login y se redirige según el rol.
+class LoginPage extends StatefulWidget {
+  const LoginPage({super.key});
+
+  @override
+  State<LoginPage> createState() => _LoginPageState();
+}
+
+class _LoginPageState extends State<LoginPage> {
+  // Usuario de prueba (harcodeado hasta tener el backend)
+  final String _emailValido = 'vecino@gmail.com';
+  final String _passwordValido = '123456';
+
+  // Key del formulario para poder validar todos los campos juntos
+  final _formKey = GlobalKey<FormState>();
+
+  // Controllers para leer lo que escribe el usuario
+  final _emailController = TextEditingController();
+  final _passwordController = TextEditingController();
+
+  bool _ocultarPassword = true;
+  bool _cargando = false;
+
+  // Libero los controllers cuando se cierra la pantalla
+  @override
+  void dispose() {
+    _emailController.dispose();
+    _passwordController.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      // El AppBar ya trae la flecha para volver a la HomePage
+      appBar: AppBar(title: const Text('Iniciar sesión')),
+      body: Form(
+        key: _formKey,
+        child: ListView(
+          padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 20),
+          children: [
+            const SizedBox(height: 24),
+            Icon(
+              Icons.lock_person,
+              size: 80,
+              color: Theme.of(context).colorScheme.primary,
+            ),
+            const SizedBox(height: 32),
+            _crearEmail(),
+            const SizedBox(height: 16),
+            _crearPassword(),
+            const SizedBox(height: 32),
+            _crearBoton(),
+            const SizedBox(height: 24),
+
+            // Ayuda para la presentación, después lo saco
+            const Text(
+              'Usuario de prueba: vecino@gmail.com / 123456',
+              textAlign: TextAlign.center,
+              style: TextStyle(color: Colors.grey),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  // Campo email. Con keyboardType aparece el @ en el teclado
+  Widget _crearEmail() {
+    return TextFormField(
+      controller: _emailController,
+      keyboardType: TextInputType.emailAddress,
+      decoration: const InputDecoration(
+        labelText: 'Email',
+        hintText: 'tuemail@gmail.com',
+        prefixIcon: Icon(Icons.email),
+      ),
+      validator: (value) {
+        if (value == null || value.trim().isEmpty) {
+          return 'Ingresá tu email';
+        }
+        if (!value.contains('@')) {
+          return 'El email no es válido';
+        }
+        return null;
+      },
+    );
+  }
+
+  // Campo contraseña, con el ojito para mostrarla u ocultarla
+  Widget _crearPassword() {
+    return TextFormField(
+      controller: _passwordController,
+      obscureText: _ocultarPassword,
+      decoration: InputDecoration(
+        labelText: 'Contraseña',
+        prefixIcon: const Icon(Icons.lock),
+        suffixIcon: IconButton(
+          icon: Icon(
+            _ocultarPassword ? Icons.visibility : Icons.visibility_off,
+          ),
+          onPressed: () {
+            setState(() => _ocultarPassword = !_ocultarPassword);
+          },
+        ),
+      ),
+      validator: (value) {
+        if (value == null || value.isEmpty) {
+          return 'Ingresá tu contraseña';
+        }
+        if (value.length < 6) {
+          return 'Mínimo 6 caracteres';
+        }
+        return null;
+      },
+    );
+  }
+
+  // Mientras "carga" deshabilito el botón y muestro el circulito
+  Widget _crearBoton() {
+    return FilledButton(
+      style: FilledButton.styleFrom(
+        padding: const EdgeInsets.symmetric(vertical: 16),
+      ),
+      onPressed: _cargando ? null : _iniciarSesion,
+      child: _cargando
+          ? const SizedBox(
+              height: 20,
+              width: 20,
+              child: CircularProgressIndicator(strokeWidth: 2),
+            )
+          : const Text('Ingresar'),
+    );
+  }
+
+  Future<void> _iniciarSesion() async {
+    // Si algún campo no pasa la validación no sigo
+    if (!_formKey.currentState!.validate()) return;
+
+    setState(() => _cargando = true);
+
+    // Simulo la espera de la respuesta del servidor
+    await Future.delayed(const Duration(seconds: 1));
+
+    // Chequeo que la pantalla siga abierta antes de usar el context
+    if (!mounted) return;
+    setState(() => _cargando = false);
+
+    // TODO: reemplazar por la llamada a la API de Laravel
+    if (_emailController.text.trim() == _emailValido &&
+        _passwordController.text == _passwordValido) {
+      // Uso pushReplacementNamed para que con "atrás" no vuelva al login
+      Navigator.pushReplacementNamed(context, 'reclamos');
+    } else {
+      _mostrarAlerta();
+    }
+  }
+
+  // Alerta cuando el usuario o la contraseña no coinciden
+  void _mostrarAlerta() {
+    showDialog(
+      context: context,
+      barrierDismissible: true,
+      builder: (context) {
+        return AlertDialog(
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(20.0),
+          ),
+          title: const Text('No se pudo ingresar'),
+          content: const Text('El email o la contraseña son incorrectos.'),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.of(context).pop(),
+              child: const Text('OK'),
+            ),
+          ],
+        );
+      },
+    );
+  }
+}
+</file>
+
+<file path="lib/src/pages/reclamo_page.dart">
+import 'package:flutter/material.dart';
+
+// Pantalla para cargar un reclamo.
+// Es la misma para todas las categorías, la categoría me llega por el constructor
+// desde routes.dart.
+class ReclamoPage extends StatefulWidget {
+  final String categoria;
+
+  const ReclamoPage({super.key, required this.categoria});
+
+  @override
+  State<ReclamoPage> createState() => _ReclamoPageState();
+}
+
+class _ReclamoPageState extends State<ReclamoPage> {
+  String _descripcion = '';
+
+  // Barrios de prueba. Después van a venir de la API según el departamento del vecino
+  final List<String> _barrios = [
+    'Centro',
+    'Trinidad',
+    'Concepción',
+    'Desamparados',
+  ];
+  String _barrioSeleccionado = 'Centro';
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(title: Text('Reclamo: ${widget.categoria}')),
+      body: ListView(
+        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 20),
+        children: [
+          _crearTarjetaCategoria(),
+          const SizedBox(height: 20),
+          _crearDropdown(),
+          const SizedBox(height: 20),
+          _crearDescripcion(),
+          const SizedBox(height: 20),
+          _crearFotoPendiente(),
+          const SizedBox(height: 30),
+          _crearBoton(),
+        ],
+      ),
+    );
+  }
+
+  // Tarjeta arriba de todo para que el vecino vea qué está reportando
+  Widget _crearTarjetaCategoria() {
+    return Card(
+      elevation: 4,
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(15.0)),
+      child: ListTile(
+        leading: Icon(
+          Icons.report_problem,
+          color: Theme.of(context).colorScheme.primary,
+        ),
+        title: Text(widget.categoria),
+        subtitle: const Text('Completá los datos del problema'),
+      ),
+    );
+  }
+
+  // Lista de opciones para el dropdown de barrios
+  List<DropdownMenuItem<String>> _getOpcionesDropdown() {
+    List<DropdownMenuItem<String>> lista = [];
+    for (var barrio in _barrios) {
+      lista.add(DropdownMenuItem(value: barrio, child: Text(barrio)));
+    }
+    return lista;
+  }
+
+  Widget _crearDropdown() {
+    return Row(
+      children: [
+        const Icon(Icons.location_on),
+        const SizedBox(width: 20),
+        Expanded(
+          child: DropdownButton<String>(
+            isExpanded: true,
+            value: _barrioSeleccionado,
+            items: _getOpcionesDropdown(),
+            onChanged: (opt) {
+              setState(() {
+                _barrioSeleccionado = opt!;
+              });
+            },
+          ),
+        ),
+      ],
+    );
+  }
+
+  // Campo para describir el problema
+  Widget _crearDescripcion() {
+    return TextField(
+      textCapitalization: TextCapitalization.sentences,
+      maxLines: 4,
+      decoration: InputDecoration(
+        counter: Text('Letras ${_descripcion.length}'),
+        labelText: 'Descripción',
+        hintText: 'Ej: hay un bache grande frente a la escuela',
+        helperText: 'Contá qué pasa y alguna referencia del lugar',
+        alignLabelWithHint: true,
+      ),
+      onChanged: (valor) {
+        setState(() {
+          _descripcion = valor;
+        });
+      },
+    );
+  }
+
+  // Lugar reservado para la foto y el GPS, lo hago en el próximo paso
+  Widget _crearFotoPendiente() {
+    return const Card(
+      child: ListTile(
+        leading: Icon(Icons.camera_alt),
+        title: Text('Foto y ubicación GPS'),
+        subtitle: Text('Próximamente'),
+      ),
+    );
+  }
+
+  Widget _crearBoton() {
+    return FilledButton.icon(
+      style: FilledButton.styleFrom(
+        padding: const EdgeInsets.symmetric(vertical: 16),
+      ),
+      icon: const Icon(Icons.send),
+      label: const Text('Enviar reclamo'),
+      onPressed: _enviarReclamo,
+    );
+  }
+
+  void _enviarReclamo() {
+    // Sin descripción no lo dejo enviar
+    if (_descripcion.trim().isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Escribí una descripción del problema')),
+      );
+      return;
+    }
+
+    // TODO: mandar el reclamo a la API de Laravel
+    showDialog(
+      context: context,
+      barrierDismissible: false,
+      builder: (dialogContext) {
+        return AlertDialog(
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(20.0),
+          ),
+          title: const Text('Reclamo enviado'),
+          content: Column(
+            // Para que la alerta se adapte al contenido
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              const Icon(Icons.check_circle, color: Colors.green, size: 60),
+              const SizedBox(height: 12),
+              Text(
+                'Tu reclamo de "${widget.categoria}" en $_barrioSeleccionado '
+                'quedó en estado pendiente.',
+                textAlign: TextAlign.center,
+              ),
+            ],
+          ),
+          actions: [
+            TextButton(
+              onPressed: () {
+                // Cierro la alerta y vuelvo a la lista de categorías
+                Navigator.of(dialogContext).pop();
+                Navigator.of(context).pop();
+              },
+              child: const Text('OK'),
+            ),
+          ],
+        );
+      },
+    );
+  }
+}
+</file>
+
+<file path="lib/src/pages/reclamos_page.dart">
+import 'package:flutter/material.dart';
+
+import 'package:atencion_ciudadana/src/providers/categorias_provider.dart';
+import 'package:atencion_ciudadana/src/utils/icono_string_util.dart';
+
+// Pantalla a la que llega el vecino después del login.
+// Muestra las categorías de reclamo que lee del json y al tocar una
+// abre la pantalla para cargar el reclamo.
+class ReclamosPage extends StatelessWidget {
+  const ReclamosPage({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(
+        title: const Text('¿Qué querés reportar?'),
+        actions: [
+          // Cerrar sesión: vuelvo a la HomePage y borro el historial de pantallas
+          IconButton(
+            icon: const Icon(Icons.logout),
+            tooltip: 'Cerrar sesión',
+            onPressed: () => Navigator.pushNamedAndRemoveUntil(
+              context,
+              '/',
+              (route) => false,
+            ),
+          ),
+        ],
+      ),
+      body: _lista(),
+    );
+  }
+
+  // El FutureBuilder espera a que el provider termine de leer el json
+  // y recién ahí dibuja la lista
+  Widget _lista() {
+    return FutureBuilder<List<dynamic>>(
+      future: categoriasProvider.cargarData(),
+      initialData: const [],
+      builder: (BuildContext context, AsyncSnapshot<List<dynamic>> snapshot) {
+        return ListView(
+          children: _listaItems(snapshot.data ?? [], context),
+        );
+      },
+    );
+  }
+
+  // Armo un ListTile por cada categoría del json
+  List<Widget> _listaItems(List<dynamic> data, BuildContext context) {
+    final List<Widget> opciones = [];
+
+    for (var opt in data) {
+      final widgetTemp = ListTile(
+        title: Text(opt['texto']),
+        subtitle: Text(opt['descripcion']),
+        leading: getIcon(opt['icon']),
+        trailing: const Icon(Icons.arrow_forward_ios),
+        // La ruta sale del json, así no tengo que hacer un if por categoría
+        onTap: () => Navigator.pushNamed(context, opt['ruta']),
+      );
+
+      opciones.add(widgetTemp);
+      opciones.add(const Divider());
+    }
+
+    return opciones;
+  }
+}
+</file>
+
+<file path="lib/src/providers/categorias_provider.dart">
+import 'dart:convert';
+
+// De services solo necesito rootBundle para leer el json de los assets
+import 'package:flutter/services.dart' show rootBundle;
+
+// Provider que lee las categorías de reclamo desde data/categorias.json.
+// Así si quiero agregar una categoría nueva solo toco el json.
+class CategoriasProvider {
+  List<dynamic> categorias = [];
+
+  // Es un Future porque leer el archivo no es instantáneo,
+  // la pantalla lo espera con un FutureBuilder
+  Future<List<dynamic>> cargarData() async {
+    final resp = await rootBundle.loadString('data/categorias.json');
+    Map dataMap = json.decode(resp);
+    categorias = dataMap['categorias'];
+    return categorias;
+  }
+}
+
+// Instancia que uso desde las pantallas
+final categoriasProvider = CategoriasProvider();
+</file>
+
+<file path="lib/src/routes/routes.dart">
+import 'package:flutter/material.dart';
+
+import 'package:atencion_ciudadana/src/pages/home_page.dart';
+import 'package:atencion_ciudadana/src/pages/login_page.dart';
+import 'package:atencion_ciudadana/src/pages/reclamos_page.dart';
+import 'package:atencion_ciudadana/src/pages/reclamo_page.dart';
+
+// Todas las rutas de la app en un solo lugar.
+// Los nombres de las categorías ('cuneta', 'bache', etc.) son los mismos
+// que la propiedad "ruta" del json, así el menú navega directo con pushNamed.
+Map<String, WidgetBuilder> getAplicationRoutes() {
+  return <String, WidgetBuilder>{
+    '/': (BuildContext context) => const HomePage(),
+    'login': (BuildContext context) => const LoginPage(),
+    'reclamos': (BuildContext context) => const ReclamosPage(),
+
+    // Las 4 categorías usan la misma pantalla, solo cambia lo que le paso
+    'cuneta': (BuildContext context) =>
+        const ReclamoPage(categoria: 'Cuneta sucia'),
+    'bache': (BuildContext context) => const ReclamoPage(categoria: 'Bache'),
+    'luminaria': (BuildContext context) =>
+        const ReclamoPage(categoria: 'Luminaria rota'),
+    'basura': (BuildContext context) =>
+        const ReclamoPage(categoria: 'Basura acumulada'),
+  };
+}
+</file>
+
+<file path="lib/src/utils/icono_string_util.dart">
+import 'package:flutter/material.dart';
+
+// Mapa para pasar del nombre del ícono que viene en el json al IconData real
+final _icons = <String, IconData>{
+  'water_damage': Icons.water_damage,
+  'add_road': Icons.add_road,
+  'lightbulb': Icons.lightbulb,
+  'delete': Icons.delete,
+};
+
+// Devuelve el ícono a partir del nombre. Si no lo encuentra muestra uno genérico.
+Icon getIcon(String nombreIcono) {
+  return Icon(
+    _icons[nombreIcono] ?? Icons.report_problem,
+    color: const Color(0xFF00796B),
+  );
+}
+</file>
+
+<file path="lib/src/app.dart">
+import 'package:flutter/material.dart';
+
+import 'routes/routes.dart';
+
+// App es el widget raíz. Lo llamo desde main.dart.
+// Acá defino el MaterialApp con el tema general y las rutas de las pantallas.
+class App extends StatelessWidget {
+  const App({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    return MaterialApp(
+      title: 'Atención Ciudadana',
+      debugShowCheckedModeBanner: false,
+
+      // Tema de la app: uso un color base verde azulado y Material 3,
+      // así todos los botones e inputs toman el mismo estilo sin repetirlo en cada pantalla.
+      theme: ThemeData(
+        colorScheme: ColorScheme.fromSeed(seedColor: const Color(0xFF00796B)),
+        useMaterial3: true,
+        inputDecorationTheme: const InputDecorationTheme(
+          border: OutlineInputBorder(
+            borderRadius: BorderRadius.all(Radius.circular(10.0)),
+          ),
+        ),
+      ),
+
+      // La primera pantalla es la HomePage ('/').
+      // Las rutas están separadas en src/routes/routes.dart para no llenar este archivo.
+      initialRoute: '/',
+      routes: getAplicationRoutes(),
     );
   }
 }
@@ -804,6 +1503,19 @@ sdks:
   flutter: ">=3.18.0-18.0.pre.54"
 </file>
 
+<file path="lib/main.dart">
+import 'package:flutter/material.dart';
+
+import 'src/app.dart';
+
+// Punto de entrada de la app.
+// Acá no pongo nada más, solo arranco el widget App que está en src/app.dart.
+// Toda la configuración (tema, rutas, etc.) la manejo desde ahí para tener el main limpio.
+void main() {
+  runApp(const App());
+}
+</file>
+
 <file path="pubspec.yaml">
 name: atencion_ciudadana
 description: "A new Flutter project."
@@ -824,6 +1536,10 @@ dev_dependencies:
 
 flutter:
   uses-material-design: true
+
+  # Habilito el json con las categorías de reclamos
+  assets:
+    - data/categorias.json
 </file>
 
 <file path="README.md">
