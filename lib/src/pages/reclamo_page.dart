@@ -8,9 +8,9 @@ import 'package:atencion_ciudadana/src/models/categoria_model.dart';
 import 'package:atencion_ciudadana/src/providers/auth_provider.dart';
 import 'package:atencion_ciudadana/src/providers/barrios_provider.dart';
 import 'package:atencion_ciudadana/src/providers/reclamos_provider.dart';
-import 'package:atencion_ciudadana/src/services/camara_service.dart';
 import 'package:atencion_ciudadana/src/services/notification_service.dart';
 import 'package:atencion_ciudadana/src/services/ubicacion_service.dart';
+import 'package:atencion_ciudadana/src/utils/foto_util.dart';
 import 'package:atencion_ciudadana/src/utils/icono_string_util.dart';
 import 'package:atencion_ciudadana/src/widgets/mapa_ubicacion.dart';
 import 'package:atencion_ciudadana/src/widgets/vista_foto.dart';
@@ -283,63 +283,17 @@ class _ReclamoPageState extends State<ReclamoPage> {
     );
   }
 
-  // Pide el permiso y, si lo da, abre la cámara
+  // Pide el permiso y, si lo da, abre la cámara (ver utils/foto_util.dart)
   Future<void> _tomarFoto() async {
-    final permiso = await camaraService.pedirPermisoCamara();
-    if (!mounted) return;
-
-    if (permiso == ResultadoPermiso.denegadoPermanente) {
-      _mostrarPermisoBloqueado();
-      return;
-    }
-
-    if (permiso == ResultadoPermiso.denegado) {
-      _avisar('Necesitamos la cámara para sacar la foto del problema');
-      return;
-    }
-
-    final foto = await camaraService.tomarFoto();
-
-    // Si canceló la cámara no hago nada
-    if (foto == null) return;
-
-    final bytes = await foto.readAsBytes();
-    setState(() {
-      _foto = bytes;
-    });
-  }
-
-  // El usuario rechazó el permiso varias veces: ya no se puede volver a
-  // pedir, así que le ofrezco ir a los ajustes del celular
-  void _mostrarPermisoBloqueado() {
-    showDialog(
-      context: context,
-      builder: (dialogContext) {
-        return AlertDialog(
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(20.0),
-          ),
-          title: const Text('Permiso de cámara bloqueado'),
-          content: const Text(
-            'Para sacar la foto tenés que habilitar la cámara '
-            'desde los ajustes del celular.',
-          ),
-          actions: [
-            TextButton(
-              onPressed: () => Navigator.of(dialogContext).pop(),
-              child: const Text('Cancelar'),
-            ),
-            TextButton(
-              onPressed: () {
-                Navigator.of(dialogContext).pop();
-                camaraService.abrirAjustes();
-              },
-              child: const Text('Abrir ajustes'),
-            ),
-          ],
-        );
-      },
+    final foto = await tomarFotoConPermiso(
+      context,
+      motivo: 'Necesitamos la cámara para sacar la foto del problema',
     );
+    if (foto == null || !mounted) return;
+
+    setState(() {
+      _foto = foto;
+    });
   }
 
   Future<void> _enviarReclamo() async {
