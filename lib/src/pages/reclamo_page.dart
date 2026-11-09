@@ -1,11 +1,14 @@
 import 'dart:typed_data';
 
 import 'package:flutter/material.dart';
+import 'package:latlong2/latlong.dart';
 
 import 'package:atencion_ciudadana/src/models/barrio_model.dart';
 import 'package:atencion_ciudadana/src/providers/auth_provider.dart';
 import 'package:atencion_ciudadana/src/providers/barrios_provider.dart';
 import 'package:atencion_ciudadana/src/services/camara_service.dart';
+import 'package:atencion_ciudadana/src/services/ubicacion_service.dart';
+import 'package:atencion_ciudadana/src/widgets/mapa_ubicacion.dart';
 import 'package:atencion_ciudadana/src/widgets/vista_foto.dart';
 
 // Pantalla para cargar un reclamo.
@@ -34,6 +37,18 @@ class _ReclamoPageState extends State<ReclamoPage> {
   // si el problema está en otro lado
   int? _barrioSeleccionado = authProvider.perfilActual?.barrioId;
 
+  // Ubicación actual del GPS (null mientras se busca o si hubo error)
+  LatLng? _ubicacion;
+  bool _buscandoUbicacion = false;
+  UbicacionException? _errorUbicacion;
+
+  @override
+  void initState() {
+    super.initState();
+    // Apenas se abre el formulario busco la ubicación
+    _buscarUbicacion();
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -50,7 +65,8 @@ class _ReclamoPageState extends State<ReclamoPage> {
           _crearTitulo('Foto del problema'),
           VistaFoto(foto: _foto, onTomarFoto: _tomarFoto),
           const SizedBox(height: 20),
-          _crearUbicacionPendiente(),
+          _crearTitulo('Ubicación del problema'),
+          _crearUbicacion(),
           const SizedBox(height: 30),
           _crearBoton(),
         ],
@@ -153,15 +169,88 @@ class _ReclamoPageState extends State<ReclamoPage> {
     );
   }
 
-  // Lugar reservado para el GPS y el mapa, lo hago en el próximo paso
-  Widget _crearUbicacionPendiente() {
-    return const Card(
-      child: ListTile(
-        leading: Icon(Icons.map),
-        title: Text('Ubicación GPS'),
-        subtitle: Text('Próximamente'),
-      ),
+  // Mapa con la ubicación actual. Tiene 3 estados:
+  // buscando, error (con opción de reintentar) y listo (muestra el mapa)
+  Widget _crearUbicacion() {
+    if (_buscandoUbicacion) {
+      return const Card(
+        child: ListTile(
+          leading: SizedBox(
+            width: 24,
+            height: 24,
+            child: CircularProgressIndicator(strokeWidth: 2),
+          ),
+          title: Text('Obteniendo tu ubicación...'),
+        ),
+      );
+    }
+
+    if (_errorUbicacion != null) {
+      return Card(
+        child: Padding(
+          padding: const EdgeInsets.all(12),
+          child: Column(
+            children: [
+              ListTile(
+                leading: const Icon(Icons.location_off, color: Colors.red),
+                title: Text(_errorUbicacion!.mensaje),
+              ),
+              Row(
+                mainAxisAlignment: MainAxisAlignment.end,
+                children: [
+                  if (_errorUbicacion!.permanente)
+                    TextButton(
+                      onPressed: ubicacionService.abrirAjustes,
+                      child: const Text('Abrir ajustes'),
+                    ),
+                  TextButton.icon(
+                    onPressed: _buscarUbicacion,
+                    icon: const Icon(Icons.refresh),
+                    label: const Text('Reintentar'),
+                  ),
+                ],
+              ),
+            ],
+          ),
+        ),
+      );
+    }
+
+    if (_ubicacion == null) return const SizedBox.shrink();
+
+    return Column(
+      children: [
+        // La key hace que el mapa se vuelva a centrar si cambia la ubicación
+        MapaUbicacion(key: ValueKey(_ubicacion), punto: _ubicacion!),
+        Align(
+          alignment: Alignment.centerRight,
+          child: TextButton.icon(
+            onPressed: _buscarUbicacion,
+            icon: const Icon(Icons.my_location),
+            label: const Text('Actualizar ubicación'),
+          ),
+        ),
+      ],
     );
+  }
+
+  // Pide la ubicación al servicio y actualiza la pantalla según el resultado
+  Future<void> _buscarUbicacion() async {
+    setState(() {
+      _buscandoUbicacion = true;
+      _errorUbicacion = null;
+    });
+
+    try {
+      final ubicacion = await ubicacionService.obtenerUbicacionActual();
+      if (!mounted) return;
+      setState(() => _ubicacion = ubicacion);
+    } on UbicacionException catch (e) {
+      if (!mounted) return;
+      setState(() => _errorUbicacion = e);
+    } finally {
+      if (mounted) setState(() => _buscandoUbicacion = false);
+    }
   }
 
   Widget _crearBoton() {
@@ -251,6 +340,11 @@ class _ReclamoPageState extends State<ReclamoPage> {
       return;
     }
 
+    if (_ubicacion == null) {
+      _avisar('Esperá a que se cargue la ubicación del problema');
+      return;
+    }
+
     // Busco el nombre del barrio elegido para mostrarlo en el mensaje
     final barrios = await _barrios;
     final nombreBarrio = barrios
@@ -259,7 +353,7 @@ class _ReclamoPageState extends State<ReclamoPage> {
 
     if (!mounted) return;
 
-    // TODO: guardar el reclamo en Supabase (después del GPS)
+    // TODO: guardar el reclamo en Supabase (próximo paso)
     showDialog(
       context: context,
       barrierDismissible: false,
