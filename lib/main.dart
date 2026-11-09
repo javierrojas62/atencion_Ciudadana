@@ -3,10 +3,11 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 
 import 'src/app.dart';
 import 'src/config/supabase_config.dart';
+import 'src/services/notification_service.dart';
 
 // Punto de entrada de la app.
-// Antes de arrancar conecto con Supabase, así cualquier pantalla
-// puede usarlo con Supabase.instance.client
+// Antes de arrancar conecto con Supabase e inicializo las notificaciones,
+// así cualquier pantalla las puede usar.
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
 
@@ -14,15 +15,9 @@ void main() async {
     url: SupabaseConfig.url,
     publishableKey: SupabaseConfig.publishableKey,
   );
-    // PRUEBA DE CONEXIÓN (borrar después)
-  try {
-    final datos = await Supabase.instance.client
-        .from('categorias')
-        .select('nombre');
-    debugPrint('✅ Conectado a Supabase: $datos');
-  } catch (e) {
-    debugPrint('❌ Error de conexión: $e');
-  }
+
+  // Notificaciones locales (como vimos en clase)
+  await NotificationService().init();
 
   runApp(const App());
 }

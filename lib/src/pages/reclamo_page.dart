@@ -9,6 +9,7 @@ import 'package:atencion_ciudadana/src/providers/auth_provider.dart';
 import 'package:atencion_ciudadana/src/providers/barrios_provider.dart';
 import 'package:atencion_ciudadana/src/providers/reclamos_provider.dart';
 import 'package:atencion_ciudadana/src/services/camara_service.dart';
+import 'package:atencion_ciudadana/src/services/notification_service.dart';
 import 'package:atencion_ciudadana/src/services/ubicacion_service.dart';
 import 'package:atencion_ciudadana/src/utils/icono_string_util.dart';
 import 'package:atencion_ciudadana/src/widgets/mapa_ubicacion.dart';
@@ -375,6 +376,13 @@ class _ReclamoPageState extends State<ReclamoPage> {
         longitud: _ubicacion!.longitude,
       );
     } on ReclamoException catch (e) {
+      // Aviso en la barra de notificaciones del celular
+      NotificationService().showInstantNotification(
+        id: 2,
+        title: 'No se pudo enviar el reclamo',
+        body: e.mensaje,
+      );
+
       if (!mounted) return;
       setState(() => _enviando = false);
       _mostrarError(e.mensaje);
@@ -386,6 +394,15 @@ class _ReclamoPageState extends State<ReclamoPage> {
     final nombreBarrio = barrios
         .firstWhere((b) => b.id == _barrioSeleccionado)
         .nombre;
+
+    // Aviso en la barra de notificaciones del celular
+    NotificationService().showInstantNotification(
+      id: 1,
+      title: 'Reclamo enviado',
+      body:
+          'Tu reclamo de "${widget.categoria.nombre}" en $nombreBarrio '
+          'quedó pendiente.',
+    );
 
     if (!mounted) return;
     setState(() => _enviando = false);
