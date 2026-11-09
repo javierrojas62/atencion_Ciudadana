@@ -23,7 +23,3 @@ dev_dependencies:
 
 flutter:
   uses-material-design: true
-
-  # Habilito el json con las categorías de reclamos
-  assets:
-    - data/categorias.json

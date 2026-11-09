@@ -1,20 +1,23 @@
-import 'dart:convert';
+import 'package:supabase_flutter/supabase_flutter.dart';
 
-// De services solo necesito rootBundle para leer el json de los assets
-import 'package:flutter/services.dart' show rootBundle;
+import 'package:atencion_ciudadana/src/models/categoria_model.dart';
 
-// Provider que lee las categorías de reclamo desde data/categorias.json.
-// Así si quiero agregar una categoría nueva solo toco el json.
+// Provider que lee las categorías de reclamo desde Supabase.
+// Antes las leía de data/categorias.json; ahora están en la base,
+// así una categoría nueva aparece en la app sin tocar el código.
 class CategoriasProvider {
-  List<dynamic> categorias = [];
+  final _supabase = Supabase.instance.client;
 
-  // Es un Future porque leer el archivo no es instantáneo,
+  // Es un Future porque la consulta no es instantánea,
   // la pantalla lo espera con un FutureBuilder
-  Future<List<dynamic>> cargarData() async {
-    final resp = await rootBundle.loadString('data/categorias.json');
-    Map dataMap = json.decode(resp);
-    categorias = dataMap['categorias'];
-    return categorias;
+  Future<List<CategoriaModel>> cargarData() async {
+    final datos = await _supabase
+        .from('categorias')
+        .select('id, slug, nombre, descripcion, icono')
+        .eq('activa', true)
+        .order('id');
+
+    return datos.map((cat) => CategoriaModel.fromJson(cat)).toList();
   }
 }
 

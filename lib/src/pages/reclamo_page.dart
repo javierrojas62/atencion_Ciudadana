@@ -4,18 +4,21 @@ import 'package:flutter/material.dart';
 import 'package:latlong2/latlong.dart';
 
 import 'package:atencion_ciudadana/src/models/barrio_model.dart';
+import 'package:atencion_ciudadana/src/models/categoria_model.dart';
 import 'package:atencion_ciudadana/src/providers/auth_provider.dart';
 import 'package:atencion_ciudadana/src/providers/barrios_provider.dart';
+import 'package:atencion_ciudadana/src/providers/reclamos_provider.dart';
 import 'package:atencion_ciudadana/src/services/camara_service.dart';
 import 'package:atencion_ciudadana/src/services/ubicacion_service.dart';
+import 'package:atencion_ciudadana/src/utils/icono_string_util.dart';
 import 'package:atencion_ciudadana/src/widgets/mapa_ubicacion.dart';
 import 'package:atencion_ciudadana/src/widgets/vista_foto.dart';
 
 // Pantalla para cargar un reclamo.
-// Es la misma para todas las categorías, la categoría me llega por el constructor
-// desde routes.dart.
+// Es la misma para todas las categorías: la categoría elegida me llega
+// como argumento de la ruta (ver routes.dart).
 class ReclamoPage extends StatefulWidget {
-  final String categoria;
+  final CategoriaModel categoria;
 
   const ReclamoPage({super.key, required this.categoria});
 
@@ -42,6 +45,9 @@ class _ReclamoPageState extends State<ReclamoPage> {
   bool _buscandoUbicacion = false;
   UbicacionException? _errorUbicacion;
 
+  // Mientras se sube la foto y se guarda el reclamo
+  bool _enviando = false;
+
   @override
   void initState() {
     super.initState();
@@ -52,7 +58,7 @@ class _ReclamoPageState extends State<ReclamoPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: Text('Reclamo: ${widget.categoria}')),
+      appBar: AppBar(title: const Text('Nuevo reclamo')),
       body: ListView(
         padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 20),
         children: [
@@ -78,11 +84,15 @@ class _ReclamoPageState extends State<ReclamoPage> {
   Widget _crearTarjetaCategoria() {
     return Card(
       child: ListTile(
-        leading: Icon(
-          Icons.report_problem,
-          color: Theme.of(context).colorScheme.primary,
+        // Mismo ícono que en la lista de categorías
+        leading: CircleAvatar(
+          backgroundColor: Theme.of(context).colorScheme.primaryContainer,
+          child: getIcon(widget.categoria.icono),
         ),
-        title: Text(widget.categoria),
+        title: Text(
+          widget.categoria.nombre,
+          style: const TextStyle(fontWeight: FontWeight.bold),
+        ),
         subtitle: const Text('Completá los datos del problema'),
       ),
     );
@@ -253,14 +263,22 @@ class _ReclamoPageState extends State<ReclamoPage> {
     }
   }
 
+  // Mientras se envía deshabilito el botón y muestro el circulito,
+  // así no se manda dos veces el mismo reclamo
   Widget _crearBoton() {
     return FilledButton.icon(
       style: FilledButton.styleFrom(
         padding: const EdgeInsets.symmetric(vertical: 16),
       ),
-      icon: const Icon(Icons.send),
-      label: const Text('Enviar reclamo'),
-      onPressed: _enviarReclamo,
+      icon: _enviando
+          ? const SizedBox(
+              width: 20,
+              height: 20,
+              child: CircularProgressIndicator(strokeWidth: 2),
+            )
+          : const Icon(Icons.send),
+      label: Text(_enviando ? 'Enviando...' : 'Enviar reclamo'),
+      onPressed: _enviando ? null : _enviarReclamo,
     );
   }
 
@@ -345,6 +363,24 @@ class _ReclamoPageState extends State<ReclamoPage> {
       return;
     }
 
+    setState(() => _enviando = true);
+
+    try {
+      await reclamosProvider.crearReclamo(
+        categoriaId: widget.categoria.id,
+        barrioId: _barrioSeleccionado!,
+        descripcion: _descripcion.trim(),
+        foto: _foto!,
+        latitud: _ubicacion!.latitude,
+        longitud: _ubicacion!.longitude,
+      );
+    } on ReclamoException catch (e) {
+      if (!mounted) return;
+      setState(() => _enviando = false);
+      _mostrarError(e.mensaje);
+      return;
+    }
+
     // Busco el nombre del barrio elegido para mostrarlo en el mensaje
     final barrios = await _barrios;
     final nombreBarrio = barrios
@@ -352,8 +388,8 @@ class _ReclamoPageState extends State<ReclamoPage> {
         .nombre;
 
     if (!mounted) return;
+    setState(() => _enviando = false);
 
-    // TODO: guardar el reclamo en Supabase (próximo paso)
     showDialog(
       context: context,
       barrierDismissible: false,
@@ -370,7 +406,7 @@ class _ReclamoPageState extends State<ReclamoPage> {
               const Icon(Icons.check_circle, color: Colors.green, size: 60),
               const SizedBox(height: 12),
               Text(
-                'Tu reclamo de "${widget.categoria}" en $nombreBarrio '
+                'Tu reclamo de "${widget.categoria.nombre}" en $nombreBarrio '
                 'quedó en estado pendiente.',
                 textAlign: TextAlign.center,
               ),
@@ -383,6 +419,35 @@ class _ReclamoPageState extends State<ReclamoPage> {
                 Navigator.of(dialogContext).pop();
                 Navigator.of(context).pop();
               },
+              child: const Text('OK'),
+            ),
+          ],
+        );
+      },
+    );
+  }
+
+  // Si falló el envío, el formulario queda como estaba para reintentar
+  void _mostrarError(String mensaje) {
+    showDialog(
+      context: context,
+      builder: (dialogContext) {
+        return AlertDialog(
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(20.0),
+          ),
+          title: const Text('No se pudo enviar'),
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              const Icon(Icons.error, color: Colors.red, size: 60),
+              const SizedBox(height: 12),
+              Text(mensaje, textAlign: TextAlign.center),
+            ],
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.of(dialogContext).pop(),
               child: const Text('OK'),
             ),
           ],
