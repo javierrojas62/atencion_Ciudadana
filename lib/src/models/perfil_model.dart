@@ -6,6 +6,7 @@ class PerfilModel {
   final String apellido;
   final String rol; // 'vecino', 'operario' o 'admin'
   final bool activo;
+  final int? barrioId; // solo los vecinos tienen barrio
 
   PerfilModel({
     required this.id,
@@ -14,6 +15,7 @@ class PerfilModel {
     required this.apellido,
     required this.rol,
     required this.activo,
+    this.barrioId,
   });
 
   // Convierte la fila que devuelve Supabase en un objeto
@@ -25,6 +27,7 @@ class PerfilModel {
       apellido: json['apellido'],
       rol: json['rol'],
       activo: json['activo'],
+      barrioId: json['barrio_id'],
     );
   }
 

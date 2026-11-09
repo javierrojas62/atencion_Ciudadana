@@ -92,16 +92,12 @@ class _HomePageState extends State<HomePage> {
               ),
               const SizedBox(height: 12),
 
-              // El registro lo hago en el próximo paso, por ahora solo aviso
+              // Registro: solo para vecinos (a los operarios los crea el admin)
               OutlinedButton(
                 style: OutlinedButton.styleFrom(
                   padding: const EdgeInsets.symmetric(vertical: 16),
                 ),
-                onPressed: () {
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(content: Text('Registro próximamente')),
-                  );
-                },
+                onPressed: () => Navigator.pushNamed(context, 'registro'),
                 child: const Text('Registrarme'),
               ),
             ],

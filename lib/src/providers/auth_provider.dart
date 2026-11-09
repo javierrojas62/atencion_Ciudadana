@@ -3,12 +3,13 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:atencion_ciudadana/src/models/perfil_model.dart';
 
 // Error con un mensaje listo para mostrarle al usuario
+// (lo uso tanto en el login como en el registro)
 class LoginException implements Exception {
   final String mensaje;
   LoginException(this.mensaje);
 }
 
-// Provider de autenticación: iniciar sesión, leer el perfil y salir.
+// Provider de autenticación: registrarse, iniciar sesión, leer el perfil y salir.
 class AuthProvider {
   final _supabase = Supabase.instance.client;
 
@@ -40,12 +41,47 @@ class AuthProvider {
     return perfil;
   }
 
+  // Crea la cuenta de un vecino.
+  // Los datos extra viajan como metadata y la base arma el perfil sola,
+  // siempre con rol vecino (nadie puede elegir su rol al registrarse).
+  // Devuelve null si Supabase pide confirmar el email antes de entrar.
+  Future<PerfilModel?> registrarVecino({
+    required String nombre,
+    required String apellido,
+    required String email,
+    required String password,
+    required int barrioId,
+    required String parcela,
+  }) async {
+    try {
+      final resp = await _supabase.auth.signUp(
+        email: email,
+        password: password,
+        data: {
+          'nombre': nombre,
+          'apellido': apellido,
+          'barrio_id': barrioId,
+          'parcela': parcela,
+        },
+      );
+
+      // Sin sesión = Supabase está esperando la confirmación del email
+      if (resp.session == null) return null;
+    } on AuthException catch (e) {
+      throw LoginException(_traducirError(e.message));
+    } catch (_) {
+      throw LoginException('No se pudo conectar. Revisá tu conexión.');
+    }
+
+    return obtenerPerfil();
+  }
+
   // Lee de la tabla perfiles los datos del usuario logueado
   Future<PerfilModel> obtenerPerfil() async {
     try {
       final datos = await _supabase
           .from('perfiles')
-          .select('id, email, nombre, apellido, rol, activo')
+          .select('id, email, nombre, apellido, rol, activo, barrio_id')
           .eq('id', _supabase.auth.currentUser!.id)
           .single();
       perfilActual = PerfilModel.fromJson(datos);
@@ -69,7 +105,20 @@ class AuthProvider {
     if (mensaje.contains('Email not confirmed')) {
       return 'Todavía no confirmaste tu email.';
     }
-    return 'No se pudo iniciar sesión. Intentá de nuevo.';
+    if (mensaje.contains('already registered')) {
+      return 'Ya existe una cuenta con ese email.';
+    }
+    if (mensaje.contains('Password should be at least')) {
+      return 'La contraseña debe tener al menos 6 caracteres.';
+    }
+    if (mensaje.contains('invalid') && mensaje.contains('mail')) {
+      return 'El email no es válido.';
+    }
+    if (mensaje.contains('Database error saving new user')) {
+      // La base rechazó el registro (falta barrio, parcela, nombre, etc.)
+      return 'No se pudo crear la cuenta. Revisá que todos los datos estén completos.';
+    }
+    return 'Ocurrió un error. Intentá de nuevo.';
   }
 }
 
