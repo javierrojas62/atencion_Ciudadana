@@ -1,8 +1,12 @@
+import 'dart:typed_data';
+
 import 'package:flutter/material.dart';
 
 import 'package:atencion_ciudadana/src/models/barrio_model.dart';
 import 'package:atencion_ciudadana/src/providers/auth_provider.dart';
 import 'package:atencion_ciudadana/src/providers/barrios_provider.dart';
+import 'package:atencion_ciudadana/src/services/camara_service.dart';
+import 'package:atencion_ciudadana/src/widgets/vista_foto.dart';
 
 // Pantalla para cargar un reclamo.
 // Es la misma para todas las categorías, la categoría me llega por el constructor
@@ -18,6 +22,9 @@ class ReclamoPage extends StatefulWidget {
 
 class _ReclamoPageState extends State<ReclamoPage> {
   String _descripcion = '';
+
+  // Foto del problema (en bytes, así sirve en el celular y en la web)
+  Uint8List? _foto;
 
   // Barrios de Rawson desde Supabase. Se piden una sola vez al abrir la pantalla.
   late final Future<List<BarrioModel>> _barrios =
@@ -40,7 +47,10 @@ class _ReclamoPageState extends State<ReclamoPage> {
           const SizedBox(height: 20),
           _crearDescripcion(),
           const SizedBox(height: 20),
-          _crearFotoPendiente(),
+          _crearTitulo('Foto del problema'),
+          VistaFoto(foto: _foto, onTomarFoto: _tomarFoto),
+          const SizedBox(height: 20),
+          _crearUbicacionPendiente(),
           const SizedBox(height: 30),
           _crearBoton(),
         ],
@@ -58,6 +68,16 @@ class _ReclamoPageState extends State<ReclamoPage> {
         ),
         title: Text(widget.categoria),
         subtitle: const Text('Completá los datos del problema'),
+      ),
+    );
+  }
+
+  Widget _crearTitulo(String texto) {
+    return Padding(
+      padding: const EdgeInsets.only(left: 4, bottom: 8),
+      child: Text(
+        texto,
+        style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
       ),
     );
   }
@@ -89,7 +109,9 @@ class _ReclamoPageState extends State<ReclamoPage> {
               child: DropdownButton<int>(
                 isExpanded: true,
                 value: existe ? _barrioSeleccionado : null,
-                hint: Text(barrios.isEmpty ? 'Cargando barrios...' : 'Elegí el barrio'),
+                hint: Text(
+                  barrios.isEmpty ? 'Cargando barrios...' : 'Elegí el barrio',
+                ),
                 items: barrios
                     .map(
                       (barrio) => DropdownMenuItem(
@@ -131,12 +153,12 @@ class _ReclamoPageState extends State<ReclamoPage> {
     );
   }
 
-  // Lugar reservado para la foto y el GPS, lo hago en el próximo paso
-  Widget _crearFotoPendiente() {
+  // Lugar reservado para el GPS y el mapa, lo hago en el próximo paso
+  Widget _crearUbicacionPendiente() {
     return const Card(
       child: ListTile(
-        leading: Icon(Icons.camera_alt),
-        title: Text('Foto y ubicación GPS'),
+        leading: Icon(Icons.map),
+        title: Text('Ubicación GPS'),
         subtitle: Text('Próximamente'),
       ),
     );
@@ -153,6 +175,65 @@ class _ReclamoPageState extends State<ReclamoPage> {
     );
   }
 
+  // Pide el permiso y, si lo da, abre la cámara
+  Future<void> _tomarFoto() async {
+    final permiso = await camaraService.pedirPermisoCamara();
+    if (!mounted) return;
+
+    if (permiso == ResultadoPermiso.denegadoPermanente) {
+      _mostrarPermisoBloqueado();
+      return;
+    }
+
+    if (permiso == ResultadoPermiso.denegado) {
+      _avisar('Necesitamos la cámara para sacar la foto del problema');
+      return;
+    }
+
+    final foto = await camaraService.tomarFoto();
+
+    // Si canceló la cámara no hago nada
+    if (foto == null) return;
+
+    final bytes = await foto.readAsBytes();
+    setState(() {
+      _foto = bytes;
+    });
+  }
+
+  // El usuario rechazó el permiso varias veces: ya no se puede volver a
+  // pedir, así que le ofrezco ir a los ajustes del celular
+  void _mostrarPermisoBloqueado() {
+    showDialog(
+      context: context,
+      builder: (dialogContext) {
+        return AlertDialog(
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(20.0),
+          ),
+          title: const Text('Permiso de cámara bloqueado'),
+          content: const Text(
+            'Para sacar la foto tenés que habilitar la cámara '
+            'desde los ajustes del celular.',
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.of(dialogContext).pop(),
+              child: const Text('Cancelar'),
+            ),
+            TextButton(
+              onPressed: () {
+                Navigator.of(dialogContext).pop();
+                camaraService.abrirAjustes();
+              },
+              child: const Text('Abrir ajustes'),
+            ),
+          ],
+        );
+      },
+    );
+  }
+
   Future<void> _enviarReclamo() async {
     if (_barrioSeleccionado == null) {
       _avisar('Elegí el barrio donde está el problema');
@@ -165,6 +246,11 @@ class _ReclamoPageState extends State<ReclamoPage> {
       return;
     }
 
+    if (_foto == null) {
+      _avisar('Sacá una foto del problema');
+      return;
+    }
+
     // Busco el nombre del barrio elegido para mostrarlo en el mensaje
     final barrios = await _barrios;
     final nombreBarrio = barrios
@@ -173,7 +259,7 @@ class _ReclamoPageState extends State<ReclamoPage> {
 
     if (!mounted) return;
 
-    // TODO: guardar el reclamo en Supabase (próximo paso, con foto y GPS)
+    // TODO: guardar el reclamo en Supabase (después del GPS)
     showDialog(
       context: context,
       barrierDismissible: false,
