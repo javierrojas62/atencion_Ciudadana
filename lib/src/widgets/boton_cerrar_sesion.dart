@@ -1,5 +1,6 @@
-import 'package:atencion_ciudadana/src/models/auth_provider.dart';
 import 'package:flutter/material.dart';
+
+import 'package:atencion_ciudadana/src/providers/auth_provider.dart';
 
 // Botón de cerrar sesión para el AppBar de cualquier pantalla.
 // Cierra la sesión en Supabase y vuelve al inicio borrando el historial.

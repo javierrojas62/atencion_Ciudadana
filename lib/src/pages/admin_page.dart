@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import 'package:atencion_ciudadana/src/widgets/boton_cerrar_sesion.dart';
+import 'package:atencion_ciudadana/src/widgets/en_construccion.dart';
 
 // Pantalla del administrador. Acá van a ir el dashboard, usuarios y barrios.
 class AdminPage extends StatelessWidget {
@@ -13,7 +14,7 @@ class AdminPage extends StatelessWidget {
         title: const Text('Panel de administración'),
         actions: const [BotonCerrarSesion()],
       ),
-      body: const Center(child: Text('Vista del admin (próximamente)')),
+      body: const EnConstruccion(),
     );
   }
 }

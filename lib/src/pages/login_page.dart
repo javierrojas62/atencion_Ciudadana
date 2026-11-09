@@ -1,9 +1,10 @@
-import 'package:atencion_ciudadana/src/models/auth_provider.dart';
 import 'package:flutter/material.dart';
 
+import 'package:atencion_ciudadana/src/providers/auth_provider.dart';
+
 // Pantalla de inicio de sesión.
-// Por ahora el usuario está harcodeado acá. Cuando tenga la API en Laravel
-// esto se reemplaza por el POST al login y se redirige según el rol.
+// Valida los campos, inicia sesión con Supabase y manda a cada usuario
+// a la pantalla de su rol (vecino, operario o admin).
 class LoginPage extends StatefulWidget {
   const LoginPage({super.key});
 
@@ -32,6 +33,8 @@ class _LoginPageState extends State<LoginPage> {
 
   @override
   Widget build(BuildContext context) {
+    final colores = Theme.of(context).colorScheme;
+
     return Scaffold(
       // El AppBar ya trae la flecha para volver a la HomePage
       appBar: AppBar(title: const Text('Iniciar sesión')),
@@ -41,25 +44,36 @@ class _LoginPageState extends State<LoginPage> {
           padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 20),
           children: [
             const SizedBox(height: 24),
-            Icon(
-              Icons.lock_person,
-              size: 80,
-              color: Theme.of(context).colorScheme.primary,
+
+            // Mismo estilo de logo que la HomePage
+            CircleAvatar(
+              radius: 45,
+              backgroundColor: colores.primaryContainer,
+              child: Icon(Icons.lock_person, size: 50, color: colores.primary),
+            ),
+            const SizedBox(height: 16),
+
+            Text(
+              'Bienvenido',
+              textAlign: TextAlign.center,
+              style: Theme.of(context).textTheme.headlineSmall?.copyWith(
+                fontWeight: FontWeight.bold,
+                color: colores.primary,
+              ),
+            ),
+            const SizedBox(height: 4),
+            const Text(
+              'Ingresá con tu email y contraseña',
+              textAlign: TextAlign.center,
+              style: TextStyle(color: Colors.grey),
             ),
             const SizedBox(height: 32),
+
             _crearEmail(),
             const SizedBox(height: 16),
             _crearPassword(),
             const SizedBox(height: 32),
             _crearBoton(),
-            const SizedBox(height: 24),
-
-            // Ayuda para la presentación, después lo saco
-            const Text(
-              'Usuario de prueba: vecino@gmail.com / 123456',
-              textAlign: TextAlign.center,
-              style: TextStyle(color: Colors.grey),
-            ),
           ],
         ),
       ),
@@ -117,7 +131,7 @@ class _LoginPageState extends State<LoginPage> {
     );
   }
 
-  // Mientras "carga" deshabilito el botón y muestro el circulito
+  // Mientras carga deshabilito el botón y muestro el circulito
   Widget _crearBoton() {
     return FilledButton(
       style: FilledButton.styleFrom(

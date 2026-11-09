@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import 'package:atencion_ciudadana/src/widgets/boton_cerrar_sesion.dart';
+import 'package:atencion_ciudadana/src/widgets/en_construccion.dart';
 
 // Pantalla del operario. Acá van a ir los barrios con reclamos pendientes.
 class OperarioPage extends StatelessWidget {
@@ -13,7 +14,7 @@ class OperarioPage extends StatelessWidget {
         title: const Text('Reclamos pendientes'),
         actions: const [BotonCerrarSesion()],
       ),
-      body: const Center(child: Text('Vista del operario (próximamente)')),
+      body: const EnConstruccion(),
     );
   }
 }
