@@ -22,6 +22,9 @@ class AuthProvider {
         email: email,
         password: password,
       );
+    } on AuthRetryableFetchException {
+      // Supabase no pudo llegar al servidor (sin internet, DNS, servidor caído)
+      throw LoginException('No se pudo conectar. Revisá tu conexión.');
     } on AuthException catch (e) {
       throw LoginException(_traducirError(e.message));
     } catch (_) {
@@ -67,6 +70,9 @@ class AuthProvider {
 
       // Sin sesión = Supabase está esperando la confirmación del email
       if (resp.session == null) return null;
+    } on AuthRetryableFetchException {
+      // Supabase no pudo llegar al servidor (sin internet, DNS, servidor caído)
+      throw LoginException('No se pudo conectar. Revisá tu conexión.');
     } on AuthException catch (e) {
       throw LoginException(_traducirError(e.message));
     } catch (_) {
