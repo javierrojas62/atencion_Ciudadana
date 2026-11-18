@@ -3,8 +3,8 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:atencion_ciudadana/src/models/categoria_model.dart';
 
 // Provider que lee las categorías de reclamo desde Supabase.
-// Antes las leía de data/categorias.json; ahora están en la base,
-// así una categoría nueva aparece en la app sin tocar el código.
+// Están en la base (tabla categorias), así una categoría nueva
+// aparece en la app sin tocar el código.
 class CategoriasProvider {
   final _supabase = Supabase.instance.client;
 
