@@ -1,7 +1,8 @@
 import 'package:latlong2/latlong.dart';
 
-// Reclamo tal como lo ve el operario: con el nombre de la categoría y
-// del barrio (Supabase los trae junto con el reclamo).
+// Reclamo con el nombre de la categoría y del barrio (Supabase los trae
+// junto con el reclamo). Lo usan el operario (pendientes de un barrio)
+// y el vecino (su historial, con los datos del arreglo si se resolvió).
 class ReclamoModel {
   final int id;
   final String categoria;
@@ -13,6 +14,12 @@ class ReclamoModel {
   final double latitud;
   final double longitud;
   final DateTime creadoEn;
+  final String estado; // 'pendiente' o 'resuelto'
+
+  // Datos del arreglo: solo los tiene si está resuelto
+  final String? fotoReparacionUrl;
+  final String? observacion;
+  final DateTime? resueltoEn;
 
   ReclamoModel({
     required this.id,
@@ -25,6 +32,10 @@ class ReclamoModel {
     required this.latitud,
     required this.longitud,
     required this.creadoEn,
+    required this.estado,
+    this.fotoReparacionUrl,
+    this.observacion,
+    this.resueltoEn,
   });
 
   factory ReclamoModel.fromJson(Map<String, dynamic> json) {
@@ -44,6 +55,12 @@ class ReclamoModel {
       latitud: (json['latitud'] as num).toDouble(),
       longitud: (json['longitud'] as num).toDouble(),
       creadoEn: DateTime.parse(json['creado_en']).toLocal(),
+      estado: json['estado'] ?? 'pendiente',
+      fotoReparacionUrl: json['foto_reparacion_url'],
+      observacion: json['observacion'],
+      resueltoEn: json['resuelto_en'] == null
+          ? null
+          : DateTime.parse(json['resuelto_en']).toLocal(),
     );
   }
 
@@ -51,13 +68,21 @@ class ReclamoModel {
   // en "Otro" uso lo que escribió el vecino, en el resto la categoría
   String get titulo => tipoOtro != null ? 'Otro: $tipoOtro' : categoria;
 
+  // Mientras está pendiente el vecino lo puede editar o eliminar
+  bool get pendiente => estado == 'pendiente';
+
   // Punto para el mapa
   LatLng get punto => LatLng(latitud, longitud);
 
-  // Fecha en formato dd/mm/aaaa hh:mm
-  String get fecha {
+  // Fecha en que se cargó, en formato dd/mm/aaaa hh:mm
+  String get fecha => _formatear(creadoEn);
+
+  // Fecha en que se resolvió (vacío si sigue pendiente)
+  String get fechaResuelto => resueltoEn == null ? '' : _formatear(resueltoEn!);
+
+  static String _formatear(DateTime f) {
     String dos(int n) => n.toString().padLeft(2, '0');
-    return '${dos(creadoEn.day)}/${dos(creadoEn.month)}/${creadoEn.year} '
-        '${dos(creadoEn.hour)}:${dos(creadoEn.minute)}';
+    return '${dos(f.day)}/${dos(f.month)}/${f.year} '
+        '${dos(f.hour)}:${dos(f.minute)}';
   }
 }

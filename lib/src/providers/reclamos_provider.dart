@@ -23,6 +23,7 @@ class ReclamosProvider {
   // categoría y de su barrio (Supabase une las tablas solo)
   static const String _columnas =
       'id, descripcion, tipo_otro, foto_url, latitud, longitud, creado_en, '
+      'estado, foto_reparacion_url, observacion, resuelto_en, '
       'categorias(nombre, icono), barrios(nombre)';
 
   // ---------------------------------------------------------------------
@@ -71,9 +72,104 @@ class ReclamosProvider {
       if (e.message.contains('Contá qué tipo de problema es')) {
         throw ReclamoException('Contá qué tipo de problema es.');
       }
-      throw ReclamoException('No se pudo guardar el reclamo. Intentá de nuevo.');
+      throw ReclamoException(
+        'No se pudo guardar el reclamo. Intentá de nuevo.',
+      );
     } catch (_) {
-      throw ReclamoException('No se pudo guardar el reclamo. Intentá de nuevo.');
+      throw ReclamoException(
+        'No se pudo guardar el reclamo. Intentá de nuevo.',
+      );
+    }
+  }
+
+  // ---------------------------------------------------------------------
+  // VECINO: HISTORIAL
+  // Completa el CRUD del reclamo: consulta, modificación y eliminación.
+  // La base (RLS) solo deja que el vecino vea SUS reclamos, y que edite o
+  // elimine los que siguen pendientes.
+  // ---------------------------------------------------------------------
+
+  // Reclamos del vecino que inició sesión, del más nuevo al más viejo
+  Future<List<ReclamoModel>> misReclamos() async {
+    final vecinoId = _supabase.auth.currentUser!.id;
+
+    final datos = await _supabase
+        .from('reclamos')
+        .select(_columnas)
+        .eq('vecino_id', vecinoId)
+        .order('creado_en', ascending: false);
+
+    return datos.map((r) => ReclamoModel.fromJson(r)).toList();
+  }
+
+  // Modifica la descripción (y el texto de "Otro") de un reclamo pendiente.
+  // Si RLS bloquea el update, Supabase no da error: devuelve 0 filas.
+  // Por eso pido .select('id') y reviso si la lista vino vacía.
+  Future<void> editarReclamo({
+    required int reclamoId,
+    required String descripcion,
+    String? tipoOtro,
+  }) async {
+    final List<dynamic> actualizados;
+    try {
+      actualizados = await _supabase
+          .from('reclamos')
+          .update({'descripcion': descripcion, 'tipo_otro': tipoOtro})
+          .eq('id', reclamoId)
+          .eq('estado', 'pendiente')
+          .select('id');
+    } on PostgrestException catch (e) {
+      if (e.message.contains('Contá qué tipo de problema es')) {
+        throw ReclamoException('Contá qué tipo de problema es.');
+      }
+      throw ReclamoException(
+        'No se pudo modificar el reclamo. Intentá de nuevo.',
+      );
+    } catch (_) {
+      throw ReclamoException(
+        'No se pudo modificar el reclamo. Revisá tu conexión.',
+      );
+    }
+
+    // Ninguna fila: el operario lo resolvió mientras el vecino editaba
+    if (actualizados.isEmpty) {
+      throw ReclamoException(
+        'Este reclamo ya fue resuelto y no se puede modificar.',
+      );
+    }
+  }
+
+  // Elimina (cancela) un reclamo pendiente y después borra su foto.
+  Future<void> eliminarReclamo(ReclamoModel reclamo) async {
+    final List<dynamic> eliminados;
+    try {
+      eliminados = await _supabase
+          .from('reclamos')
+          .delete()
+          .eq('id', reclamo.id)
+          .eq('estado', 'pendiente')
+          .select('id');
+    } catch (_) {
+      throw ReclamoException(
+        'No se pudo eliminar el reclamo. Intentá de nuevo.',
+      );
+    }
+
+    // Igual que al editar: 0 filas = ya no estaba pendiente
+    if (eliminados.isEmpty) {
+      throw ReclamoException(
+        'Este reclamo ya fue resuelto y no se puede eliminar.',
+      );
+    }
+
+    // La ruta de la foto en el bucket es lo que está después de
+    // "/reclamos/" en la URL pública (<id_del_vecino>/<archivo>.jpg)
+    try {
+      final ruta = reclamo.fotoUrl.split('/$_bucket/').last;
+      await _supabase.storage.from(_bucket).remove([ruta]);
+    } catch (_) {
+      // Si la foto no se borra no pasa nada grave:
+      // el reclamo igual quedó eliminado
     }
   }
 

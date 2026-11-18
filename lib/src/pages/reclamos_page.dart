@@ -17,7 +17,15 @@ class ReclamosPage extends StatelessWidget {
     return Scaffold(
       appBar: AppBar(
         title: const Text('Atención Ciudadana'),
-        actions: const [BotonCerrarSesion()],
+        actions: [
+          // Acceso al historial de reclamos del vecino
+          IconButton(
+            icon: const Icon(Icons.history),
+            tooltip: 'Mis reclamos',
+            onPressed: () => Navigator.pushNamed(context, 'mis_reclamos'),
+          ),
+          const BotonCerrarSesion(),
+        ],
       ),
       body: _lista(),
     );
@@ -29,7 +37,10 @@ class ReclamosPage extends StatelessWidget {
     return FutureBuilder<List<CategoriaModel>>(
       future: categoriasProvider.cargarData(),
       builder: (BuildContext context, snapshot) {
-        final List<Widget> items = [_crearEncabezado(context)];
+        final List<Widget> items = [
+          _crearEncabezado(context),
+          _crearTarjetaMisReclamos(context),
+        ];
 
         if (snapshot.hasError) {
           items.add(
@@ -95,6 +106,31 @@ class ReclamosPage extends StatelessWidget {
     return opciones;
   }
 
+  // Tarjeta para entrar al historial (además del botón del AppBar,
+  // así el vecino la encuentra fácil)
+  Widget _crearTarjetaMisReclamos(BuildContext context) {
+    final colores = Theme.of(context).colorScheme;
+
+    return Card(
+      margin: const EdgeInsets.fromLTRB(16, 0, 16, 12),
+      color: colores.secondaryContainer,
+      child: ListTile(
+        contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+        leading: CircleAvatar(
+          backgroundColor: colores.surface,
+          child: Icon(Icons.history, color: colores.primary),
+        ),
+        title: const Text(
+          'Mis reclamos',
+          style: TextStyle(fontWeight: FontWeight.bold),
+        ),
+        subtitle: const Text('Mirá el estado de lo que reportaste'),
+        trailing: const Icon(Icons.arrow_forward_ios, size: 16),
+        onTap: () => Navigator.pushNamed(context, 'mis_reclamos'),
+      ),
+    );
+  }
+
   // Saludo con el nombre del vecino que inició sesión
   Widget _crearEncabezado(BuildContext context) {
     final nombre = authProvider.perfilActual?.nombre ?? '';
@@ -106,9 +142,8 @@ class ReclamosPage extends StatelessWidget {
         children: [
           Text(
             nombre.isEmpty ? 'Hola' : 'Hola, $nombre',
-            style: Theme.of(context).textTheme.headlineSmall?.copyWith(
-              fontWeight: FontWeight.bold,
-            ),
+            style: Theme.of(context).textTheme.headlineSmall
+                ?.copyWith(fontWeight: FontWeight.bold),
           ),
           const SizedBox(height: 4),
           const Text(

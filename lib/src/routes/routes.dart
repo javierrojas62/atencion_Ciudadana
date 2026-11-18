@@ -6,6 +6,8 @@ import 'package:atencion_ciudadana/src/models/reclamo_model.dart';
 import 'package:atencion_ciudadana/src/pages/admin_page.dart';
 import 'package:atencion_ciudadana/src/pages/home_page.dart';
 import 'package:atencion_ciudadana/src/pages/login_page.dart';
+import 'package:atencion_ciudadana/src/pages/mi_reclamo_detalle_page.dart';
+import 'package:atencion_ciudadana/src/pages/mis_reclamos_page.dart';
 import 'package:atencion_ciudadana/src/pages/operario_barrio_page.dart';
 import 'package:atencion_ciudadana/src/pages/operario_page.dart';
 import 'package:atencion_ciudadana/src/pages/reclamo_detalle_page.dart';
@@ -30,6 +32,12 @@ Map<String, WidgetBuilder> getAplicationRoutes() {
     // Vecino: formulario del reclamo de la categoría elegida
     'reclamo': (BuildContext context) => ReclamoPage(
       categoria: ModalRoute.of(context)!.settings.arguments as CategoriaModel,
+    ),
+
+    // Vecino: historial de sus reclamos y detalle de uno
+    'mis_reclamos': (BuildContext context) => const MisReclamosPage(),
+    'mi_reclamo_detalle': (BuildContext context) => MiReclamoDetallePage(
+      reclamo: ModalRoute.of(context)!.settings.arguments as ReclamoModel,
     ),
 
     // Operario: reclamos de un barrio y detalle de un reclamo
