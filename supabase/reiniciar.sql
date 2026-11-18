@@ -9,6 +9,7 @@ drop trigger if exists al_crear_usuario on auth.users;
 
 drop policy if exists "vecinos y operarios suben fotos a su carpeta" on storage.objects;
 drop policy if exists "todos ven las fotos de reclamos"              on storage.objects;
+drop policy if exists "cada uno borra fotos de su carpeta"           on storage.objects;
 -- políticas de versiones anteriores
 drop policy if exists "subir fotos a mi carpeta" on storage.objects;
 drop policy if exists "ver fotos de reclamos"    on storage.objects;
@@ -24,7 +25,10 @@ drop function if exists public.crear_perfil_nuevo_usuario, public.proteger_perfi
                         public.controlar_cambio_reclamo, public.mi_rol,
                         public.mi_departamento, public.verificar_admin,
                         public.admin_autorizar_operario, public.admin_cambiar_rol,
-                        public.admin_bloquear_usuario, public.admin_eliminar_usuario cascade;
+                        public.admin_bloquear_usuario, public.admin_eliminar_usuario,
+                        -- agregadas en 10_historial_y_otro.sql
+                        public.es_categoria_otro, public.calcular_hash_inicial,
+                        public.proteger_reclamo_resuelto cascade;
 
 drop type if exists public.estado_reclamo, public.rol_usuario cascade;
 
