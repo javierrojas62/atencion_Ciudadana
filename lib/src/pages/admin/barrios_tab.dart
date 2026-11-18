@@ -16,8 +16,10 @@ class BarriosTab extends StatefulWidget {
 }
 
 class _BarriosTabState extends State<BarriosTab> {
+  // ===== VARIABLES DE ESTADO =====
   late Future<List<BarrioModel>> _barrios = adminProvider.barrios();
 
+  // ===== LLAMADAS Y ACCIONES =====
   Future<void> _recargar() async {
     setState(() {
       _barrios = adminProvider.barrios();
@@ -25,6 +27,45 @@ class _BarriosTabState extends State<BarriosTab> {
     await _barrios;
   }
 
+  Future<void> _crear() async {
+    final creado = await showDialog<bool>(
+      context: context,
+      barrierDismissible: false,
+      builder: (_) => const BarrioFormDialog(),
+    );
+    if (creado == true) {
+      _avisar('Barrio creado');
+      _recargar();
+    }
+  }
+
+  Future<void> _editar(BarrioModel barrio) async {
+    final editado = await showDialog<bool>(
+      context: context,
+      barrierDismissible: false,
+      builder: (_) => BarrioFormDialog(barrio: barrio),
+    );
+    if (editado == true) {
+      _avisar('Barrio actualizado');
+      _recargar();
+    }
+  }
+
+  Future<void> _cambiarEstado(BarrioModel barrio, bool activo) async {
+    try {
+      await adminProvider.cambiarEstadoBarrio(barrio.id, activo);
+      _avisar(
+        activo
+            ? '${barrio.nombre} fue activado'
+            : '${barrio.nombre} fue desactivado: ya no aparece para elegir',
+      );
+      _recargar();
+    } on AdminException catch (e) {
+      _avisar(e.mensaje);
+    }
+  }
+
+  // ===== BUILD =====
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -74,6 +115,18 @@ class _BarriosTabState extends State<BarriosTab> {
     );
   }
 
+  // ===== WIDGETS =====
+  Widget _crearMensaje(String texto) {
+    return Padding(
+      padding: const EdgeInsets.all(40),
+      child: Text(
+        texto,
+        textAlign: TextAlign.center,
+        style: TextStyle(fontSize: 16, color: Colors.grey.shade600),
+      ),
+    );
+  }
+
   Widget _crearTarjeta(BarrioModel barrio) {
     final colores = Theme.of(context).colorScheme;
 
@@ -116,59 +169,11 @@ class _BarriosTabState extends State<BarriosTab> {
     );
   }
 
-  Future<void> _crear() async {
-    final creado = await showDialog<bool>(
-      context: context,
-      barrierDismissible: false,
-      builder: (_) => const BarrioFormDialog(),
-    );
-    if (creado == true) {
-      _avisar('Barrio creado');
-      _recargar();
-    }
-  }
-
-  Future<void> _editar(BarrioModel barrio) async {
-    final editado = await showDialog<bool>(
-      context: context,
-      barrierDismissible: false,
-      builder: (_) => BarrioFormDialog(barrio: barrio),
-    );
-    if (editado == true) {
-      _avisar('Barrio actualizado');
-      _recargar();
-    }
-  }
-
-  Future<void> _cambiarEstado(BarrioModel barrio, bool activo) async {
-    try {
-      await adminProvider.cambiarEstadoBarrio(barrio.id, activo);
-      _avisar(
-        activo
-            ? '${barrio.nombre} fue activado'
-            : '${barrio.nombre} fue desactivado: ya no aparece para elegir',
-      );
-      _recargar();
-    } on AdminException catch (e) {
-      _avisar(e.mensaje);
-    }
-  }
-
+  // ===== DIÁLOGOS Y AVISOS =====
   void _avisar(String mensaje) {
     if (!mounted) return;
     ScaffoldMessenger.of(
       context,
     ).showSnackBar(SnackBar(content: Text(mensaje)));
-  }
-
-  Widget _crearMensaje(String texto) {
-    return Padding(
-      padding: const EdgeInsets.all(40),
-      child: Text(
-        texto,
-        textAlign: TextAlign.center,
-        style: TextStyle(fontSize: 16, color: Colors.grey.shade600),
-      ),
-    );
   }
 }

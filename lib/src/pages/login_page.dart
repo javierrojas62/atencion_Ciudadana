@@ -13,16 +13,20 @@ class LoginPage extends StatefulWidget {
 }
 
 class _LoginPageState extends State<LoginPage> {
+  // ===== VARIABLES DE ESTADO =====
   // Key del formulario para poder validar todos los campos juntos
   final _formKey = GlobalKey<FormState>();
 
   // Controllers para leer lo que escribe el usuario
   final _emailController = TextEditingController();
+
   final _passwordController = TextEditingController();
 
   bool _ocultarPassword = true;
+
   bool _cargando = false;
 
+  // ===== CICLO DE VIDA =====
   // Libero los controllers cuando se cierra la pantalla
   @override
   void dispose() {
@@ -31,6 +35,36 @@ class _LoginPageState extends State<LoginPage> {
     super.dispose();
   }
 
+  // ===== LLAMADAS Y ACCIONES =====
+  Future<void> _iniciarSesion() async {
+    // Si algún campo no pasa la validación no sigo
+    if (!_formKey.currentState!.validate()) return;
+
+    setState(() => _cargando = true);
+
+    try {
+      final perfil = await authProvider.iniciarSesion(
+        _emailController.text.trim(),
+        _passwordController.text,
+      );
+
+      if (!mounted) return;
+      // Voy a la pantalla de su rol y borro el historial,
+      // así con "atrás" no vuelve al login
+      Navigator.pushNamedAndRemoveUntil(
+        context,
+        perfil.rutaInicio,
+        (route) => false,
+      );
+    } on LoginException catch (e) {
+      if (!mounted) return;
+      _mostrarAlerta(e.mensaje);
+    } finally {
+      if (mounted) setState(() => _cargando = false);
+    }
+  }
+
+  // ===== BUILD =====
   @override
   Widget build(BuildContext context) {
     final colores = Theme.of(context).colorScheme;
@@ -80,6 +114,7 @@ class _LoginPageState extends State<LoginPage> {
     );
   }
 
+  // ===== WIDGETS =====
   // Campo email. Con keyboardType aparece el @ en el teclado
   Widget _crearEmail() {
     return TextFormField(
@@ -148,34 +183,7 @@ class _LoginPageState extends State<LoginPage> {
     );
   }
 
-  Future<void> _iniciarSesion() async {
-    // Si algún campo no pasa la validación no sigo
-    if (!_formKey.currentState!.validate()) return;
-
-    setState(() => _cargando = true);
-
-    try {
-      final perfil = await authProvider.iniciarSesion(
-        _emailController.text.trim(),
-        _passwordController.text,
-      );
-
-      if (!mounted) return;
-      // Voy a la pantalla de su rol y borro el historial,
-      // así con "atrás" no vuelve al login
-      Navigator.pushNamedAndRemoveUntil(
-        context,
-        perfil.rutaInicio,
-        (route) => false,
-      );
-    } on LoginException catch (e) {
-      if (!mounted) return;
-      _mostrarAlerta(e.mensaje);
-    } finally {
-      if (mounted) setState(() => _cargando = false);
-    }
-  }
-
+  // ===== DIÁLOGOS Y AVISOS =====
   // Alerta con el motivo por el que no pudo entrar
   void _mostrarAlerta(String mensaje) {
     showDialog(

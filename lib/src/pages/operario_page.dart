@@ -16,9 +16,11 @@ class OperarioPage extends StatefulWidget {
 }
 
 class _OperarioPageState extends State<OperarioPage> {
+  // ===== VARIABLES DE ESTADO =====
   late Future<List<BarrioPendientesModel>> _barrios =
       reclamosProvider.barriosConPendientes();
 
+  // ===== LLAMADAS Y ACCIONES =====
   // Vuelve a pedir los datos (al deslizar hacia abajo o al volver
   // de un barrio, porque puede haber resuelto reclamos)
   Future<void> _recargar() async {
@@ -28,6 +30,7 @@ class _OperarioPageState extends State<OperarioPage> {
     await _barrios;
   }
 
+  // ===== BUILD =====
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -40,6 +43,7 @@ class _OperarioPageState extends State<OperarioPage> {
     );
   }
 
+  // ===== WIDGETS =====
   Widget _lista() {
     return FutureBuilder<List<BarrioPendientesModel>>(
       future: _barrios,
@@ -102,6 +106,23 @@ class _OperarioPageState extends State<OperarioPage> {
     );
   }
 
+  Widget _crearMensaje(IconData icono, String texto) {
+    return Padding(
+      padding: const EdgeInsets.all(40),
+      child: Column(
+        children: [
+          Icon(icono, size: 70, color: Colors.grey.shade400),
+          const SizedBox(height: 12),
+          Text(
+            texto,
+            textAlign: TextAlign.center,
+            style: TextStyle(fontSize: 16, color: Colors.grey.shade600),
+          ),
+        ],
+      ),
+    );
+  }
+
   Widget _crearTarjetaBarrio(BarrioPendientesModel barrio) {
     final colores = Theme.of(context).colorScheme;
     final texto = barrio.pendientes == 1
@@ -138,23 +159,6 @@ class _OperarioPageState extends State<OperarioPage> {
           // Al volver actualizo, por si resolvió alguno
           _recargar();
         },
-      ),
-    );
-  }
-
-  Widget _crearMensaje(IconData icono, String texto) {
-    return Padding(
-      padding: const EdgeInsets.all(40),
-      child: Column(
-        children: [
-          Icon(icono, size: 70, color: Colors.grey.shade400),
-          const SizedBox(height: 12),
-          Text(
-            texto,
-            textAlign: TextAlign.center,
-            style: TextStyle(fontSize: 16, color: Colors.grey.shade600),
-          ),
-        ],
       ),
     );
   }

@@ -11,6 +11,7 @@ class HomePage extends StatefulWidget {
 }
 
 class _HomePageState extends State<HomePage> {
+  // ===== VARIABLES DE ESTADO =====
   // Categorías de reclamos que se van a poder reportar.
   // Las muestro acá como chips para que el vecino vea qué tipo de problemas puede cargar.
   final List<Map<String, dynamic>> _categorias = [
@@ -20,6 +21,7 @@ class _HomePageState extends State<HomePage> {
     {'nombre': 'Basura', 'icono': Icons.delete},
   ];
 
+  // ===== BUILD =====
   @override
   Widget build(BuildContext context) {
     final colores = Theme.of(context).colorScheme;

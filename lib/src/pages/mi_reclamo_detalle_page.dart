@@ -19,205 +19,15 @@ class MiReclamoDetallePage extends StatefulWidget {
 }
 
 class _MiReclamoDetallePageState extends State<MiReclamoDetallePage> {
+  // ===== VARIABLES DE ESTADO =====
   // Mientras se guarda o se elimina deshabilito los botones
   bool _guardando = false;
+
   bool _eliminando = false;
 
   bool get _ocupado => _guardando || _eliminando;
 
-  @override
-  Widget build(BuildContext context) {
-    final reclamo = widget.reclamo;
-
-    return Scaffold(
-      appBar: AppBar(title: const Text('Mi reclamo')),
-      body: ListView(
-        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 20),
-        children: [
-          if (reclamo.pendiente) ...[
-            _crearFoto(reclamo.fotoUrl, alto: 240),
-            const SizedBox(height: 12),
-            _crearAvisoPendiente(),
-          ] else
-            _crearAntesDespues(),
-          const SizedBox(height: 12),
-          _crearTarjetaCategoria(),
-          const SizedBox(height: 20),
-          _crearTitulo('Descripción'),
-          _crearTexto(reclamo.descripcion),
-          // Lo que anotó el operario al resolverlo (es opcional)
-          if (!reclamo.pendiente && reclamo.observacion != null) ...[
-            const SizedBox(height: 20),
-            _crearTitulo('Observación del operario'),
-            _crearTexto(reclamo.observacion!),
-          ],
-          const SizedBox(height: 20),
-          _crearTitulo('Ubicación'),
-          MapaUbicacion(punto: reclamo.punto),
-          // Solo mientras está pendiente se puede modificar o eliminar
-          if (reclamo.pendiente) ...[
-            const SizedBox(height: 24),
-            _crearBotonEditar(),
-            const SizedBox(height: 12),
-            _crearBotonEliminar(),
-          ],
-        ],
-      ),
-    );
-  }
-
-  // Foto desde la URL de Storage, con circulito mientras carga
-  Widget _crearFoto(String url, {double alto = 180}) {
-    return Card(
-      clipBehavior: Clip.antiAlias,
-      child: Image.network(
-        url,
-        height: alto,
-        width: double.infinity,
-        fit: BoxFit.cover,
-        loadingBuilder: (context, child, progreso) {
-          if (progreso == null) return child;
-          return SizedBox(
-            height: alto,
-            child: const Center(child: CircularProgressIndicator()),
-          );
-        },
-        errorBuilder: (context, error, stackTrace) => SizedBox(
-          height: alto,
-          child: const Center(child: Text('No se pudo cargar la foto')),
-        ),
-      ),
-    );
-  }
-
-  // Foto del vecino y foto del arreglo, una al lado de la otra
-  Widget _crearAntesDespues() {
-    final reclamo = widget.reclamo;
-
-    return Column(
-      children: [
-        Row(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Expanded(
-              child: Column(
-                children: [_crearTitulo('Antes'), _crearFoto(reclamo.fotoUrl)],
-              ),
-            ),
-            const SizedBox(width: 8),
-            Expanded(
-              child: Column(
-                children: [
-                  _crearTitulo('Después'),
-                  // Un reclamo resuelto siempre tiene foto del arreglo,
-                  // pero por las dudas muestro un aviso si falta
-                  reclamo.fotoReparacionUrl == null
-                      ? const SizedBox(
-                          height: 180,
-                          child: Center(child: Text('Sin foto')),
-                        )
-                      : _crearFoto(reclamo.fotoReparacionUrl!),
-                ],
-              ),
-            ),
-          ],
-        ),
-        const SizedBox(height: 8),
-        Card(
-          color: Colors.green.shade50,
-          child: ListTile(
-            leading: const Icon(Icons.check_circle, color: Colors.green),
-            title: const Text('Resuelto'),
-            subtitle: Text(reclamo.fechaResuelto),
-          ),
-        ),
-      ],
-    );
-  }
-
-  Widget _crearAvisoPendiente() {
-    return Card(
-      color: Colors.orange.shade50,
-      child: const ListTile(
-        leading: Icon(Icons.schedule, color: Colors.orange),
-        title: Text('Pendiente: todavía no fue atendido'),
-      ),
-    );
-  }
-
-  Widget _crearTarjetaCategoria() {
-    final reclamo = widget.reclamo;
-
-    return Card(
-      child: ListTile(
-        leading: CircleAvatar(
-          backgroundColor: Theme.of(context).colorScheme.primaryContainer,
-          child: getIcon(reclamo.categoriaIcono),
-        ),
-        title: Text(
-          reclamo.titulo,
-          style: const TextStyle(fontWeight: FontWeight.bold),
-        ),
-        subtitle: Text('${reclamo.barrio} · ${reclamo.fecha}'),
-      ),
-    );
-  }
-
-  Widget _crearTitulo(String texto) {
-    return Padding(
-      padding: const EdgeInsets.only(left: 4, bottom: 8),
-      child: Text(
-        texto,
-        style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
-      ),
-    );
-  }
-
-  Widget _crearTexto(String texto) {
-    return SizedBox(
-      width: double.infinity,
-      child: Card(
-        child: Padding(
-          padding: const EdgeInsets.all(16),
-          child: Text(texto, style: const TextStyle(fontSize: 15)),
-        ),
-      ),
-    );
-  }
-
-  // Circulito para los botones mientras se espera a la base
-  Widget _circulito() {
-    return const SizedBox(
-      width: 20,
-      height: 20,
-      child: CircularProgressIndicator(strokeWidth: 2),
-    );
-  }
-
-  Widget _crearBotonEditar() {
-    return FilledButton.icon(
-      style: FilledButton.styleFrom(
-        padding: const EdgeInsets.symmetric(vertical: 16),
-      ),
-      icon: _guardando ? _circulito() : const Icon(Icons.edit),
-      label: Text(_guardando ? 'Guardando...' : 'Editar descripción'),
-      onPressed: _ocupado ? null : _editar,
-    );
-  }
-
-  Widget _crearBotonEliminar() {
-    return OutlinedButton.icon(
-      style: OutlinedButton.styleFrom(
-        foregroundColor: Colors.red,
-        side: const BorderSide(color: Colors.red),
-        padding: const EdgeInsets.symmetric(vertical: 16),
-      ),
-      icon: _eliminando ? _circulito() : const Icon(Icons.delete),
-      label: Text(_eliminando ? 'Eliminando...' : 'Eliminar reclamo'),
-      onPressed: _ocupado ? null : _confirmarEliminar,
-    );
-  }
-
+  // ===== LLAMADAS Y ACCIONES =====
   // ---------------------------------------------------------------------
   // MODIFICACIÓN
   // ---------------------------------------------------------------------
@@ -384,6 +194,202 @@ class _MiReclamoDetallePageState extends State<MiReclamoDetallePage> {
     Navigator.pop(context, true);
   }
 
+  // ===== BUILD =====
+  @override
+  Widget build(BuildContext context) {
+    final reclamo = widget.reclamo;
+
+    return Scaffold(
+      appBar: AppBar(title: const Text('Mi reclamo')),
+      body: ListView(
+        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 20),
+        children: [
+          if (reclamo.pendiente) ...[
+            _crearFoto(reclamo.fotoUrl, alto: 240),
+            const SizedBox(height: 12),
+            _crearAvisoPendiente(),
+          ] else
+            _crearAntesDespues(),
+          const SizedBox(height: 12),
+          _crearTarjetaCategoria(),
+          const SizedBox(height: 20),
+          _crearTitulo('Descripción'),
+          _crearTexto(reclamo.descripcion),
+          // Lo que anotó el operario al resolverlo (es opcional)
+          if (!reclamo.pendiente && reclamo.observacion != null) ...[
+            const SizedBox(height: 20),
+            _crearTitulo('Observación del operario'),
+            _crearTexto(reclamo.observacion!),
+          ],
+          const SizedBox(height: 20),
+          _crearTitulo('Ubicación'),
+          MapaUbicacion(punto: reclamo.punto),
+          // Solo mientras está pendiente se puede modificar o eliminar
+          if (reclamo.pendiente) ...[
+            const SizedBox(height: 24),
+            _crearBotonEditar(),
+            const SizedBox(height: 12),
+            _crearBotonEliminar(),
+          ],
+        ],
+      ),
+    );
+  }
+
+  // ===== WIDGETS =====
+  // Foto desde la URL de Storage, con circulito mientras carga
+  Widget _crearFoto(String url, {double alto = 180}) {
+    return Card(
+      clipBehavior: Clip.antiAlias,
+      child: Image.network(
+        url,
+        height: alto,
+        width: double.infinity,
+        fit: BoxFit.cover,
+        loadingBuilder: (context, child, progreso) {
+          if (progreso == null) return child;
+          return SizedBox(
+            height: alto,
+            child: const Center(child: CircularProgressIndicator()),
+          );
+        },
+        errorBuilder: (context, error, stackTrace) => SizedBox(
+          height: alto,
+          child: const Center(child: Text('No se pudo cargar la foto')),
+        ),
+      ),
+    );
+  }
+
+  Widget _crearAvisoPendiente() {
+    return Card(
+      color: Colors.orange.shade50,
+      child: const ListTile(
+        leading: Icon(Icons.schedule, color: Colors.orange),
+        title: Text('Pendiente: todavía no fue atendido'),
+      ),
+    );
+  }
+
+  // Foto del vecino y foto del arreglo, una al lado de la otra
+  Widget _crearAntesDespues() {
+    final reclamo = widget.reclamo;
+
+    return Column(
+      children: [
+        Row(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Expanded(
+              child: Column(
+                children: [_crearTitulo('Antes'), _crearFoto(reclamo.fotoUrl)],
+              ),
+            ),
+            const SizedBox(width: 8),
+            Expanded(
+              child: Column(
+                children: [
+                  _crearTitulo('Después'),
+                  // Un reclamo resuelto siempre tiene foto del arreglo,
+                  // pero por las dudas muestro un aviso si falta
+                  reclamo.fotoReparacionUrl == null
+                      ? const SizedBox(
+                          height: 180,
+                          child: Center(child: Text('Sin foto')),
+                        )
+                      : _crearFoto(reclamo.fotoReparacionUrl!),
+                ],
+              ),
+            ),
+          ],
+        ),
+        const SizedBox(height: 8),
+        Card(
+          color: Colors.green.shade50,
+          child: ListTile(
+            leading: const Icon(Icons.check_circle, color: Colors.green),
+            title: const Text('Resuelto'),
+            subtitle: Text(reclamo.fechaResuelto),
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _crearTitulo(String texto) {
+    return Padding(
+      padding: const EdgeInsets.only(left: 4, bottom: 8),
+      child: Text(
+        texto,
+        style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+      ),
+    );
+  }
+
+  Widget _crearTarjetaCategoria() {
+    final reclamo = widget.reclamo;
+
+    return Card(
+      child: ListTile(
+        leading: CircleAvatar(
+          backgroundColor: Theme.of(context).colorScheme.primaryContainer,
+          child: getIcon(reclamo.categoriaIcono),
+        ),
+        title: Text(
+          reclamo.titulo,
+          style: const TextStyle(fontWeight: FontWeight.bold),
+        ),
+        subtitle: Text('${reclamo.barrio} · ${reclamo.fecha}'),
+      ),
+    );
+  }
+
+  Widget _crearTexto(String texto) {
+    return SizedBox(
+      width: double.infinity,
+      child: Card(
+        child: Padding(
+          padding: const EdgeInsets.all(16),
+          child: Text(texto, style: const TextStyle(fontSize: 15)),
+        ),
+      ),
+    );
+  }
+
+  Widget _crearBotonEditar() {
+    return FilledButton.icon(
+      style: FilledButton.styleFrom(
+        padding: const EdgeInsets.symmetric(vertical: 16),
+      ),
+      icon: _guardando ? _circulito() : const Icon(Icons.edit),
+      label: Text(_guardando ? 'Guardando...' : 'Editar descripción'),
+      onPressed: _ocupado ? null : _editar,
+    );
+  }
+
+  // Circulito para los botones mientras se espera a la base
+  Widget _circulito() {
+    return const SizedBox(
+      width: 20,
+      height: 20,
+      child: CircularProgressIndicator(strokeWidth: 2),
+    );
+  }
+
+  Widget _crearBotonEliminar() {
+    return OutlinedButton.icon(
+      style: OutlinedButton.styleFrom(
+        foregroundColor: Colors.red,
+        side: const BorderSide(color: Colors.red),
+        padding: const EdgeInsets.symmetric(vertical: 16),
+      ),
+      icon: _eliminando ? _circulito() : const Icon(Icons.delete),
+      label: Text(_eliminando ? 'Eliminando...' : 'Eliminar reclamo'),
+      onPressed: _ocupado ? null : _confirmarEliminar,
+    );
+  }
+
+  // ===== DIÁLOGOS Y AVISOS =====
   void _mostrarError(String titulo, String mensaje) {
     showDialog(
       context: context,

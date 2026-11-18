@@ -12,6 +12,7 @@ import 'package:atencion_ciudadana/src/widgets/boton_cerrar_sesion.dart';
 class ReclamosPage extends StatelessWidget {
   const ReclamosPage({super.key});
 
+  // ===== BUILD =====
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -31,6 +32,7 @@ class ReclamosPage extends StatelessWidget {
     );
   }
 
+  // ===== WIDGETS =====
   // El FutureBuilder espera a que el provider traiga las categorías
   // y recién ahí dibuja la lista
   Widget _lista() {
@@ -71,6 +73,55 @@ class ReclamosPage extends StatelessWidget {
     );
   }
 
+  // Saludo con el nombre del vecino que inició sesión
+  Widget _crearEncabezado(BuildContext context) {
+    final nombre = authProvider.perfilActual?.nombre ?? '';
+
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(20, 24, 20, 12),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            nombre.isEmpty ? 'Hola' : 'Hola, $nombre',
+            style: Theme.of(context).textTheme.headlineSmall
+                ?.copyWith(fontWeight: FontWeight.bold),
+          ),
+          const SizedBox(height: 4),
+          const Text(
+            '¿Qué problema querés reportar?',
+            style: TextStyle(fontSize: 16, color: Colors.grey),
+          ),
+        ],
+      ),
+    );
+  }
+
+  // Tarjeta para entrar al historial (además del botón del AppBar,
+  // así el vecino la encuentra fácil)
+  Widget _crearTarjetaMisReclamos(BuildContext context) {
+    final colores = Theme.of(context).colorScheme;
+
+    return Card(
+      margin: const EdgeInsets.fromLTRB(16, 0, 16, 12),
+      color: colores.secondaryContainer,
+      child: ListTile(
+        contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+        leading: CircleAvatar(
+          backgroundColor: colores.surface,
+          child: Icon(Icons.history, color: colores.primary),
+        ),
+        title: const Text(
+          'Mis reclamos',
+          style: TextStyle(fontWeight: FontWeight.bold),
+        ),
+        subtitle: const Text('Mirá el estado de lo que reportaste'),
+        trailing: const Icon(Icons.arrow_forward_ios, size: 16),
+        onTap: () => Navigator.pushNamed(context, 'mis_reclamos'),
+      ),
+    );
+  }
+
   // Una tarjeta por cada categoría
   List<Widget> _listaItems(List<CategoriaModel> data, BuildContext context) {
     final colores = Theme.of(context).colorScheme;
@@ -104,54 +155,5 @@ class ReclamosPage extends StatelessWidget {
     }
 
     return opciones;
-  }
-
-  // Tarjeta para entrar al historial (además del botón del AppBar,
-  // así el vecino la encuentra fácil)
-  Widget _crearTarjetaMisReclamos(BuildContext context) {
-    final colores = Theme.of(context).colorScheme;
-
-    return Card(
-      margin: const EdgeInsets.fromLTRB(16, 0, 16, 12),
-      color: colores.secondaryContainer,
-      child: ListTile(
-        contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-        leading: CircleAvatar(
-          backgroundColor: colores.surface,
-          child: Icon(Icons.history, color: colores.primary),
-        ),
-        title: const Text(
-          'Mis reclamos',
-          style: TextStyle(fontWeight: FontWeight.bold),
-        ),
-        subtitle: const Text('Mirá el estado de lo que reportaste'),
-        trailing: const Icon(Icons.arrow_forward_ios, size: 16),
-        onTap: () => Navigator.pushNamed(context, 'mis_reclamos'),
-      ),
-    );
-  }
-
-  // Saludo con el nombre del vecino que inició sesión
-  Widget _crearEncabezado(BuildContext context) {
-    final nombre = authProvider.perfilActual?.nombre ?? '';
-
-    return Padding(
-      padding: const EdgeInsets.fromLTRB(20, 24, 20, 12),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text(
-            nombre.isEmpty ? 'Hola' : 'Hola, $nombre',
-            style: Theme.of(context).textTheme.headlineSmall
-                ?.copyWith(fontWeight: FontWeight.bold),
-          ),
-          const SizedBox(height: 4),
-          const Text(
-            '¿Qué problema querés reportar?',
-            style: TextStyle(fontSize: 16, color: Colors.grey),
-          ),
-        ],
-      ),
-    );
   }
 }

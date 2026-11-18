@@ -23,8 +23,10 @@ class DashboardTab extends StatefulWidget {
 }
 
 class _DashboardTabState extends State<DashboardTab> {
+  // ===== VARIABLES DE ESTADO =====
   late Future<_DatosDashboard> _datos = _cargar();
 
+  // ===== LLAMADAS Y ACCIONES =====
   // Las 3 consultas se hacen al mismo tiempo con Future.wait
   Future<_DatosDashboard> _cargar() async {
     final resultados = await Future.wait([
@@ -47,6 +49,7 @@ class _DashboardTabState extends State<DashboardTab> {
     await _datos;
   }
 
+  // ===== BUILD =====
   @override
   Widget build(BuildContext context) {
     return AnchoMaximo(
@@ -88,6 +91,21 @@ class _DashboardTabState extends State<DashboardTab> {
           },
         ),
       ),
+    );
+  }
+
+  // ===== WIDGETS =====
+  Widget _crearMensaje(String texto) {
+    return ListView(
+      physics: const AlwaysScrollableScrollPhysics(),
+      padding: const EdgeInsets.all(40),
+      children: [
+        Text(
+          texto,
+          textAlign: TextAlign.center,
+          style: TextStyle(fontSize: 16, color: Colors.grey.shade600),
+        ),
+      ],
     );
   }
 
@@ -135,6 +153,16 @@ class _DashboardTabState extends State<DashboardTab> {
             ],
           ),
         ),
+      ),
+    );
+  }
+
+  Widget _crearTitulo(String texto) {
+    return Padding(
+      padding: const EdgeInsets.only(left: 4, bottom: 8),
+      child: Text(
+        texto,
+        style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
       ),
     );
   }
@@ -206,30 +234,6 @@ class _DashboardTabState extends State<DashboardTab> {
         SelectableText(
           hash,
           style: const TextStyle(fontFamily: 'monospace', fontSize: 12),
-        ),
-      ],
-    );
-  }
-
-  Widget _crearTitulo(String texto) {
-    return Padding(
-      padding: const EdgeInsets.only(left: 4, bottom: 8),
-      child: Text(
-        texto,
-        style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
-      ),
-    );
-  }
-
-  Widget _crearMensaje(String texto) {
-    return ListView(
-      physics: const AlwaysScrollableScrollPhysics(),
-      padding: const EdgeInsets.all(40),
-      children: [
-        Text(
-          texto,
-          textAlign: TextAlign.center,
-          style: TextStyle(fontSize: 16, color: Colors.grey.shade600),
         ),
       ],
     );

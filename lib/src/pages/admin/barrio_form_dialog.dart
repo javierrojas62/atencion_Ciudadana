@@ -15,22 +15,56 @@ class BarrioFormDialog extends StatefulWidget {
 }
 
 class _BarrioFormDialogState extends State<BarrioFormDialog> {
+  // ===== VARIABLES DE ESTADO =====
   final _formKey = GlobalKey<FormState>();
+
   late final _nombreController = TextEditingController(
     text: widget.barrio?.nombre,
   );
 
   bool _guardando = false;
+
   String? _error;
 
   bool get _editando => widget.barrio != null;
 
+  // ===== CICLO DE VIDA =====
   @override
   void dispose() {
     _nombreController.dispose();
     super.dispose();
   }
 
+  // ===== LLAMADAS Y ACCIONES =====
+  Future<void> _guardar() async {
+    if (!_formKey.currentState!.validate()) return;
+
+    setState(() {
+      _guardando = true;
+      _error = null;
+    });
+
+    final nombre = _nombreController.text.trim();
+
+    try {
+      if (_editando) {
+        await adminProvider.editarBarrio(widget.barrio!.id, nombre);
+      } else {
+        await adminProvider.crearBarrio(nombre);
+      }
+
+      if (!mounted) return;
+      Navigator.of(context).pop(true);
+    } on AdminException catch (e) {
+      if (!mounted) return;
+      setState(() {
+        _guardando = false;
+        _error = e.mensaje;
+      });
+    }
+  }
+
+  // ===== BUILD =====
   @override
   Widget build(BuildContext context) {
     return AlertDialog(
@@ -85,33 +119,5 @@ class _BarrioFormDialogState extends State<BarrioFormDialog> {
         ),
       ],
     );
-  }
-
-  Future<void> _guardar() async {
-    if (!_formKey.currentState!.validate()) return;
-
-    setState(() {
-      _guardando = true;
-      _error = null;
-    });
-
-    final nombre = _nombreController.text.trim();
-
-    try {
-      if (_editando) {
-        await adminProvider.editarBarrio(widget.barrio!.id, nombre);
-      } else {
-        await adminProvider.crearBarrio(nombre);
-      }
-
-      if (!mounted) return;
-      Navigator.of(context).pop(true);
-    } on AdminException catch (e) {
-      if (!mounted) return;
-      setState(() {
-        _guardando = false;
-        _error = e.mensaje;
-      });
-    }
   }
 }

@@ -14,11 +14,13 @@ class MisReclamosPage extends StatefulWidget {
 }
 
 class _MisReclamosPageState extends State<MisReclamosPage> {
+  // ===== VARIABLES DE ESTADO =====
   late Future<List<ReclamoModel>> _reclamos = reclamosProvider.misReclamos();
 
   // Filtro elegido: 'todos', 'pendientes' o 'resueltos'
   String _filtro = 'todos';
 
+  // ===== LLAMADAS Y ACCIONES =====
   // Vuelve a pedir los datos (al deslizar hacia abajo o al volver
   // del detalle, porque puede haber editado o eliminado uno)
   Future<void> _recargar() async {
@@ -28,6 +30,18 @@ class _MisReclamosPageState extends State<MisReclamosPage> {
     await _reclamos;
   }
 
+  // El filtro se aplica sobre la lista que ya trajo, sin volver a consultar
+  List<ReclamoModel> _filtrar(List<ReclamoModel> reclamos) {
+    if (_filtro == 'pendientes') {
+      return reclamos.where((r) => r.pendiente).toList();
+    }
+    if (_filtro == 'resueltos') {
+      return reclamos.where((r) => !r.pendiente).toList();
+    }
+    return reclamos;
+  }
+
+  // ===== BUILD =====
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -36,6 +50,7 @@ class _MisReclamosPageState extends State<MisReclamosPage> {
     );
   }
 
+  // ===== WIDGETS =====
   Widget _lista() {
     return FutureBuilder<List<ReclamoModel>>(
       future: _reclamos,
@@ -79,17 +94,6 @@ class _MisReclamosPageState extends State<MisReclamosPage> {
     );
   }
 
-  // El filtro se aplica sobre la lista que ya trajo, sin volver a consultar
-  List<ReclamoModel> _filtrar(List<ReclamoModel> reclamos) {
-    if (_filtro == 'pendientes') {
-      return reclamos.where((r) => r.pendiente).toList();
-    }
-    if (_filtro == 'resueltos') {
-      return reclamos.where((r) => !r.pendiente).toList();
-    }
-    return reclamos;
-  }
-
   Widget _crearFiltro() {
     return Padding(
       padding: const EdgeInsets.fromLTRB(16, 16, 16, 8),
@@ -105,6 +109,23 @@ class _MisReclamosPageState extends State<MisReclamosPage> {
             _filtro = seleccion.first;
           });
         },
+      ),
+    );
+  }
+
+  Widget _crearMensaje(IconData icono, String texto) {
+    return Padding(
+      padding: const EdgeInsets.all(40),
+      child: Column(
+        children: [
+          Icon(icono, size: 70, color: Colors.grey.shade400),
+          const SizedBox(height: 12),
+          Text(
+            texto,
+            textAlign: TextAlign.center,
+            style: TextStyle(fontSize: 16, color: Colors.grey.shade600),
+          ),
+        ],
       ),
     );
   }
@@ -169,23 +190,6 @@ class _MisReclamosPageState extends State<MisReclamosPage> {
       child: Text(
         reclamo.pendiente ? 'Pendiente' : 'Resuelto',
         style: const TextStyle(color: Colors.white, fontSize: 12),
-      ),
-    );
-  }
-
-  Widget _crearMensaje(IconData icono, String texto) {
-    return Padding(
-      padding: const EdgeInsets.all(40),
-      child: Column(
-        children: [
-          Icon(icono, size: 70, color: Colors.grey.shade400),
-          const SizedBox(height: 12),
-          Text(
-            texto,
-            textAlign: TextAlign.center,
-            style: TextStyle(fontSize: 16, color: Colors.grey.shade600),
-          ),
-        ],
       ),
     );
   }

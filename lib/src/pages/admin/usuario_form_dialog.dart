@@ -19,21 +19,27 @@ class UsuarioFormDialog extends StatefulWidget {
 }
 
 class _UsuarioFormDialogState extends State<UsuarioFormDialog> {
+  // ===== VARIABLES DE ESTADO =====
   final _formKey = GlobalKey<FormState>();
 
   late final _nombreController = TextEditingController(
     text: widget.usuario?.nombre,
   );
+
   late final _apellidoController = TextEditingController(
     text: widget.usuario?.apellido,
   );
+
   late final _parcelaController = TextEditingController(
     text: widget.usuario?.parcela,
   );
+
   final _emailController = TextEditingController();
+
   final _passwordController = TextEditingController();
 
   late String _rol = widget.usuario?.rol ?? 'vecino';
+
   late int? _barrioId = widget.usuario?.barrioId;
 
   // Solo los barrios activos, igual que en el registro
@@ -41,11 +47,14 @@ class _UsuarioFormDialogState extends State<UsuarioFormDialog> {
       .cargarActivos();
 
   bool _guardando = false;
+
   String? _error;
 
   bool get _editando => widget.usuario != null;
+
   bool get _esVecino => _rol == 'vecino';
 
+  // ===== CICLO DE VIDA =====
   @override
   void dispose() {
     _nombreController.dispose();
@@ -56,6 +65,58 @@ class _UsuarioFormDialogState extends State<UsuarioFormDialog> {
     super.dispose();
   }
 
+  // ===== LLAMADAS Y ACCIONES =====
+  Future<void> _guardar() async {
+    if (!_formKey.currentState!.validate()) return;
+
+    setState(() {
+      _guardando = true;
+      _error = null;
+    });
+
+    final nombre = _nombreController.text.trim();
+    final apellido = _apellidoController.text.trim();
+    final parcela = _parcelaController.text.trim();
+
+    try {
+      if (_editando) {
+        await adminProvider.editarUsuario(
+          id: widget.usuario!.id,
+          nombre: nombre,
+          apellido: apellido,
+          barrioId: _esVecino ? _barrioId : null,
+          parcela: _esVecino ? parcela : null,
+        );
+      } else if (_esVecino) {
+        await adminProvider.crearVecino(
+          nombre: nombre,
+          apellido: apellido,
+          email: _emailController.text.trim(),
+          password: _passwordController.text,
+          barrioId: _barrioId!,
+          parcela: parcela,
+        );
+      } else {
+        await adminProvider.crearOperario(
+          nombre: nombre,
+          apellido: apellido,
+          email: _emailController.text.trim(),
+          password: _passwordController.text,
+        );
+      }
+
+      if (!mounted) return;
+      Navigator.of(context).pop(true);
+    } on AdminException catch (e) {
+      if (!mounted) return;
+      setState(() {
+        _guardando = false;
+        _error = e.mensaje;
+      });
+    }
+  }
+
+  // ===== BUILD =====
   @override
   Widget build(BuildContext context) {
     return AlertDialog(
@@ -135,6 +196,7 @@ class _UsuarioFormDialogState extends State<UsuarioFormDialog> {
     );
   }
 
+  // ===== WIDGETS =====
   // Al crear se elige el rol; al editar solo se muestra (no se cambia)
   Widget _crearRol() {
     if (_editando) {
@@ -258,55 +320,5 @@ class _UsuarioFormDialogState extends State<UsuarioFormDialog> {
         );
       },
     );
-  }
-
-  Future<void> _guardar() async {
-    if (!_formKey.currentState!.validate()) return;
-
-    setState(() {
-      _guardando = true;
-      _error = null;
-    });
-
-    final nombre = _nombreController.text.trim();
-    final apellido = _apellidoController.text.trim();
-    final parcela = _parcelaController.text.trim();
-
-    try {
-      if (_editando) {
-        await adminProvider.editarUsuario(
-          id: widget.usuario!.id,
-          nombre: nombre,
-          apellido: apellido,
-          barrioId: _esVecino ? _barrioId : null,
-          parcela: _esVecino ? parcela : null,
-        );
-      } else if (_esVecino) {
-        await adminProvider.crearVecino(
-          nombre: nombre,
-          apellido: apellido,
-          email: _emailController.text.trim(),
-          password: _passwordController.text,
-          barrioId: _barrioId!,
-          parcela: parcela,
-        );
-      } else {
-        await adminProvider.crearOperario(
-          nombre: nombre,
-          apellido: apellido,
-          email: _emailController.text.trim(),
-          password: _passwordController.text,
-        );
-      }
-
-      if (!mounted) return;
-      Navigator.of(context).pop(true);
-    } on AdminException catch (e) {
-      if (!mounted) return;
-      setState(() {
-        _guardando = false;
-        _error = e.mensaje;
-      });
-    }
   }
 }

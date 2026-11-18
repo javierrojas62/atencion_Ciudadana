@@ -23,18 +23,77 @@ class ReclamoDetallePage extends StatefulWidget {
 }
 
 class _ReclamoDetallePageState extends State<ReclamoDetallePage> {
+  // ===== VARIABLES DE ESTADO =====
   final _observacionController = TextEditingController();
 
   // Foto del trabajo terminado
   Uint8List? _fotoArreglo;
+
   bool _enviando = false;
 
+  // ===== CICLO DE VIDA =====
   @override
   void dispose() {
     _observacionController.dispose();
     super.dispose();
   }
 
+  // ===== LLAMADAS Y ACCIONES =====
+  Future<void> _tomarFoto() async {
+    final foto = await tomarFotoConPermiso(
+      context,
+      motivo: 'Necesitamos la cámara para sacar la foto del arreglo',
+    );
+    if (foto == null || !mounted) return;
+
+    setState(() {
+      _fotoArreglo = foto;
+    });
+  }
+
+  Future<void> _realizar() async {
+    // La foto del arreglo es obligatoria; la observación no
+    if (_fotoArreglo == null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Sacá una foto del trabajo terminado')),
+      );
+      return;
+    }
+
+    setState(() => _enviando = true);
+
+    try {
+      await reclamosProvider.realizarReclamo(
+        reclamoId: widget.reclamo.id,
+        fotoArreglo: _fotoArreglo!,
+        observacion: _observacionController.text,
+      );
+    } on ReclamoException catch (e) {
+      if (!mounted) return;
+      setState(() => _enviando = false);
+      _mostrarAlerta(
+        titulo: 'No se pudo guardar',
+        mensaje: e.mensaje,
+        icono: Icons.error,
+        color: Colors.red,
+      );
+      return;
+    }
+
+    if (!mounted) return;
+    setState(() => _enviando = false);
+
+    _mostrarAlerta(
+      titulo: 'Reclamo resuelto',
+      mensaje: 'El reclamo quedó cerrado con la foto del arreglo.',
+      icono: Icons.check_circle,
+      color: Colors.green,
+      // Al cerrar vuelvo a la lista avisando que se resolvió
+      alCerrar: () => Navigator.of(context).pop(true),
+    );
+  }
+
+  // ===== BUILD =====
   @override
   Widget build(BuildContext context) {
     final reclamo = widget.reclamo;
@@ -79,6 +138,7 @@ class _ReclamoDetallePageState extends State<ReclamoDetallePage> {
     );
   }
 
+  // ===== WIDGETS =====
   // Foto que sacó el vecino
   Widget _crearFotoVecino() {
     return Card(
@@ -162,60 +222,7 @@ class _ReclamoDetallePageState extends State<ReclamoDetallePage> {
     );
   }
 
-  Future<void> _tomarFoto() async {
-    final foto = await tomarFotoConPermiso(
-      context,
-      motivo: 'Necesitamos la cámara para sacar la foto del arreglo',
-    );
-    if (foto == null || !mounted) return;
-
-    setState(() {
-      _fotoArreglo = foto;
-    });
-  }
-
-  Future<void> _realizar() async {
-    // La foto del arreglo es obligatoria; la observación no
-    if (_fotoArreglo == null) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Sacá una foto del trabajo terminado')),
-      );
-      return;
-    }
-
-    setState(() => _enviando = true);
-
-    try {
-      await reclamosProvider.realizarReclamo(
-        reclamoId: widget.reclamo.id,
-        fotoArreglo: _fotoArreglo!,
-        observacion: _observacionController.text,
-      );
-    } on ReclamoException catch (e) {
-      if (!mounted) return;
-      setState(() => _enviando = false);
-      _mostrarAlerta(
-        titulo: 'No se pudo guardar',
-        mensaje: e.mensaje,
-        icono: Icons.error,
-        color: Colors.red,
-      );
-      return;
-    }
-
-    if (!mounted) return;
-    setState(() => _enviando = false);
-
-    _mostrarAlerta(
-      titulo: 'Reclamo resuelto',
-      mensaje: 'El reclamo quedó cerrado con la foto del arreglo.',
-      icono: Icons.check_circle,
-      color: Colors.green,
-      // Al cerrar vuelvo a la lista avisando que se resolvió
-      alCerrar: () => Navigator.of(context).pop(true),
-    );
-  }
-
+  // ===== DIÁLOGOS Y AVISOS =====
   void _mostrarAlerta({
     required String titulo,
     required String mensaje,

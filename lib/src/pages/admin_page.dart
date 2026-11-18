@@ -11,6 +11,7 @@ import 'package:atencion_ciudadana/src/widgets/boton_cerrar_sesion.dart';
 class AdminPage extends StatelessWidget {
   const AdminPage({super.key});
 
+  // ===== BUILD =====
   @override
   Widget build(BuildContext context) {
     return DefaultTabController(

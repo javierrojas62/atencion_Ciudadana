@@ -28,6 +28,7 @@ class ReclamoPage extends StatefulWidget {
 }
 
 class _ReclamoPageState extends State<ReclamoPage> {
+  // ===== VARIABLES DE ESTADO =====
   String _descripcion = '';
 
   // Solo para la categoría "Otro": qué problema es (ej: árbol caído)
@@ -46,12 +47,15 @@ class _ReclamoPageState extends State<ReclamoPage> {
 
   // Ubicación actual del GPS (null mientras se busca o si hubo error)
   LatLng? _ubicacion;
+
   bool _buscandoUbicacion = false;
+
   UbicacionException? _errorUbicacion;
 
   // Mientras se sube la foto y se guarda el reclamo
   bool _enviando = false;
 
+  // ===== CICLO DE VIDA =====
   @override
   void initState() {
     super.initState();
@@ -59,218 +63,7 @@ class _ReclamoPageState extends State<ReclamoPage> {
     _buscarUbicacion();
   }
 
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(title: const Text('Nuevo reclamo')),
-      body: ListView(
-        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 20),
-        children: [
-          _crearTarjetaCategoria(),
-          const SizedBox(height: 20),
-          _crearDropdown(),
-          const SizedBox(height: 20),
-          // Si eligió "Otro", primero tiene que contar qué problema es
-          if (widget.categoria.esOtro) ...[
-            _crearTipoOtro(),
-            const SizedBox(height: 20),
-          ],
-          _crearDescripcion(),
-          const SizedBox(height: 20),
-          _crearTitulo('Foto del problema'),
-          VistaFoto(foto: _foto, onTomarFoto: _tomarFoto),
-          const SizedBox(height: 20),
-          _crearTitulo('Ubicación del problema'),
-          _crearUbicacion(),
-          const SizedBox(height: 30),
-          _crearBoton(),
-        ],
-      ),
-    );
-  }
-
-  // Tarjeta arriba de todo para que el vecino vea qué está reportando
-  Widget _crearTarjetaCategoria() {
-    return Card(
-      child: ListTile(
-        // Mismo ícono que en la lista de categorías
-        leading: CircleAvatar(
-          backgroundColor: Theme.of(context).colorScheme.primaryContainer,
-          child: getIcon(widget.categoria.icono),
-        ),
-        title: Text(
-          widget.categoria.nombre,
-          style: const TextStyle(fontWeight: FontWeight.bold),
-        ),
-        subtitle: const Text('Completá los datos del problema'),
-      ),
-    );
-  }
-
-  Widget _crearTitulo(String texto) {
-    return Padding(
-      padding: const EdgeInsets.only(left: 4, bottom: 8),
-      child: Text(
-        texto,
-        style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
-      ),
-    );
-  }
-
-  // Lista de barrios. Como vienen de Supabase, uso un FutureBuilder.
-  Widget _crearDropdown() {
-    return FutureBuilder<List<BarrioModel>>(
-      future: _barrios,
-      builder: (context, snapshot) {
-        if (snapshot.hasError) {
-          return const Text(
-            'No se pudieron cargar los barrios. Revisá tu conexión.',
-            style: TextStyle(color: Colors.red),
-          );
-        }
-
-        final barrios = snapshot.data ?? [];
-
-        // El valor elegido tiene que estar en la lista, si no el
-        // DropdownButton da error (pasa mientras carga, o si el barrio
-        // del vecino fue desactivado)
-        final existe = barrios.any((b) => b.id == _barrioSeleccionado);
-
-        return Row(
-          children: [
-            const Icon(Icons.location_on),
-            const SizedBox(width: 20),
-            Expanded(
-              child: DropdownButton<int>(
-                isExpanded: true,
-                value: existe ? _barrioSeleccionado : null,
-                hint: Text(
-                  barrios.isEmpty ? 'Cargando barrios...' : 'Elegí el barrio',
-                ),
-                items: barrios
-                    .map(
-                      (barrio) => DropdownMenuItem(
-                        value: barrio.id,
-                        child: Text(barrio.nombre),
-                      ),
-                    )
-                    .toList(),
-                onChanged: (opt) {
-                  setState(() {
-                    _barrioSeleccionado = opt;
-                  });
-                },
-              ),
-            ),
-          ],
-        );
-      },
-    );
-  }
-
-  // Campo obligatorio de la categoría "Otro". Lo limito a 60 letras
-  // porque se muestra como título del reclamo.
-  Widget _crearTipoOtro() {
-    return TextField(
-      textCapitalization: TextCapitalization.sentences,
-      maxLength: 60,
-      decoration: const InputDecoration(
-        labelText: '¿Qué problema es?',
-        hintText: 'Ej: árbol caído',
-      ),
-      onChanged: (valor) {
-        setState(() {
-          _tipoOtro = valor;
-        });
-      },
-    );
-  }
-
-  // Campo para describir el problema
-  Widget _crearDescripcion() {
-    return TextField(
-      textCapitalization: TextCapitalization.sentences,
-      maxLines: 4,
-      decoration: InputDecoration(
-        counter: Text('Letras ${_descripcion.length}'),
-        labelText: 'Descripción',
-        hintText: 'Ej: hay un bache grande frente a la escuela',
-        helperText: 'Contá qué pasa y alguna referencia del lugar',
-        alignLabelWithHint: true,
-      ),
-      onChanged: (valor) {
-        setState(() {
-          _descripcion = valor;
-        });
-      },
-    );
-  }
-
-  // Mapa con la ubicación actual. Tiene 3 estados:
-  // buscando, error (con opción de reintentar) y listo (muestra el mapa)
-  Widget _crearUbicacion() {
-    if (_buscandoUbicacion) {
-      return const Card(
-        child: ListTile(
-          leading: SizedBox(
-            width: 24,
-            height: 24,
-            child: CircularProgressIndicator(strokeWidth: 2),
-          ),
-          title: Text('Obteniendo tu ubicación...'),
-        ),
-      );
-    }
-
-    if (_errorUbicacion != null) {
-      return Card(
-        child: Padding(
-          padding: const EdgeInsets.all(12),
-          child: Column(
-            children: [
-              ListTile(
-                leading: const Icon(Icons.location_off, color: Colors.red),
-                title: Text(_errorUbicacion!.mensaje),
-              ),
-              Row(
-                mainAxisAlignment: MainAxisAlignment.end,
-                children: [
-                  if (_errorUbicacion!.permanente)
-                    TextButton(
-                      onPressed: ubicacionService.abrirAjustes,
-                      child: const Text('Abrir ajustes'),
-                    ),
-                  TextButton.icon(
-                    onPressed: _buscarUbicacion,
-                    icon: const Icon(Icons.refresh),
-                    label: const Text('Reintentar'),
-                  ),
-                ],
-              ),
-            ],
-          ),
-        ),
-      );
-    }
-
-    if (_ubicacion == null) return const SizedBox.shrink();
-
-    return Column(
-      children: [
-        // La key hace que el mapa se vuelva a centrar si cambia la ubicación
-        MapaUbicacion(key: ValueKey(_ubicacion), punto: _ubicacion!),
-        Align(
-          alignment: Alignment.centerRight,
-          child: TextButton.icon(
-            onPressed: _buscarUbicacion,
-            icon: const Icon(Icons.my_location),
-            label: const Text('Actualizar ubicación'),
-          ),
-        ),
-      ],
-    );
-  }
-
+  // ===== LLAMADAS Y ACCIONES =====
   // Pide la ubicación al servicio y actualiza la pantalla según el resultado
   Future<void> _buscarUbicacion() async {
     setState(() {
@@ -288,25 +81,6 @@ class _ReclamoPageState extends State<ReclamoPage> {
     } finally {
       if (mounted) setState(() => _buscandoUbicacion = false);
     }
-  }
-
-  // Mientras se envía deshabilito el botón y muestro el circulito,
-  // así no se manda dos veces el mismo reclamo
-  Widget _crearBoton() {
-    return FilledButton.icon(
-      style: FilledButton.styleFrom(
-        padding: const EdgeInsets.symmetric(vertical: 16),
-      ),
-      icon: _enviando
-          ? const SizedBox(
-              width: 20,
-              height: 20,
-              child: CircularProgressIndicator(strokeWidth: 2),
-            )
-          : const Icon(Icons.send),
-      label: Text(_enviando ? 'Enviando...' : 'Enviar reclamo'),
-      onPressed: _enviando ? null : _enviarReclamo,
-    );
   }
 
   // Pide el permiso y, si lo da, abre la cámara (ver utils/foto_util.dart)
@@ -436,6 +210,240 @@ class _ReclamoPageState extends State<ReclamoPage> {
     );
   }
 
+  // ===== BUILD =====
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(title: const Text('Nuevo reclamo')),
+      body: ListView(
+        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 20),
+        children: [
+          _crearTarjetaCategoria(),
+          const SizedBox(height: 20),
+          _crearDropdown(),
+          const SizedBox(height: 20),
+          // Si eligió "Otro", primero tiene que contar qué problema es
+          if (widget.categoria.esOtro) ...[
+            _crearTipoOtro(),
+            const SizedBox(height: 20),
+          ],
+          _crearDescripcion(),
+          const SizedBox(height: 20),
+          _crearTitulo('Foto del problema'),
+          VistaFoto(foto: _foto, onTomarFoto: _tomarFoto),
+          const SizedBox(height: 20),
+          _crearTitulo('Ubicación del problema'),
+          _crearUbicacion(),
+          const SizedBox(height: 30),
+          _crearBoton(),
+        ],
+      ),
+    );
+  }
+
+  // ===== WIDGETS =====
+  // Tarjeta arriba de todo para que el vecino vea qué está reportando
+  Widget _crearTarjetaCategoria() {
+    return Card(
+      child: ListTile(
+        // Mismo ícono que en la lista de categorías
+        leading: CircleAvatar(
+          backgroundColor: Theme.of(context).colorScheme.primaryContainer,
+          child: getIcon(widget.categoria.icono),
+        ),
+        title: Text(
+          widget.categoria.nombre,
+          style: const TextStyle(fontWeight: FontWeight.bold),
+        ),
+        subtitle: const Text('Completá los datos del problema'),
+      ),
+    );
+  }
+
+  // Lista de barrios. Como vienen de Supabase, uso un FutureBuilder.
+  Widget _crearDropdown() {
+    return FutureBuilder<List<BarrioModel>>(
+      future: _barrios,
+      builder: (context, snapshot) {
+        if (snapshot.hasError) {
+          return const Text(
+            'No se pudieron cargar los barrios. Revisá tu conexión.',
+            style: TextStyle(color: Colors.red),
+          );
+        }
+
+        final barrios = snapshot.data ?? [];
+
+        // El valor elegido tiene que estar en la lista, si no el
+        // DropdownButton da error (pasa mientras carga, o si el barrio
+        // del vecino fue desactivado)
+        final existe = barrios.any((b) => b.id == _barrioSeleccionado);
+
+        return Row(
+          children: [
+            const Icon(Icons.location_on),
+            const SizedBox(width: 20),
+            Expanded(
+              child: DropdownButton<int>(
+                isExpanded: true,
+                value: existe ? _barrioSeleccionado : null,
+                hint: Text(
+                  barrios.isEmpty ? 'Cargando barrios...' : 'Elegí el barrio',
+                ),
+                items: barrios
+                    .map(
+                      (barrio) => DropdownMenuItem(
+                        value: barrio.id,
+                        child: Text(barrio.nombre),
+                      ),
+                    )
+                    .toList(),
+                onChanged: (opt) {
+                  setState(() {
+                    _barrioSeleccionado = opt;
+                  });
+                },
+              ),
+            ),
+          ],
+        );
+      },
+    );
+  }
+
+  // Campo obligatorio de la categoría "Otro". Lo limito a 60 letras
+  // porque se muestra como título del reclamo.
+  Widget _crearTipoOtro() {
+    return TextField(
+      textCapitalization: TextCapitalization.sentences,
+      maxLength: 60,
+      decoration: const InputDecoration(
+        labelText: '¿Qué problema es?',
+        hintText: 'Ej: árbol caído',
+      ),
+      onChanged: (valor) {
+        setState(() {
+          _tipoOtro = valor;
+        });
+      },
+    );
+  }
+
+  // Campo para describir el problema
+  Widget _crearDescripcion() {
+    return TextField(
+      textCapitalization: TextCapitalization.sentences,
+      maxLines: 4,
+      decoration: InputDecoration(
+        counter: Text('Letras ${_descripcion.length}'),
+        labelText: 'Descripción',
+        hintText: 'Ej: hay un bache grande frente a la escuela',
+        helperText: 'Contá qué pasa y alguna referencia del lugar',
+        alignLabelWithHint: true,
+      ),
+      onChanged: (valor) {
+        setState(() {
+          _descripcion = valor;
+        });
+      },
+    );
+  }
+
+  Widget _crearTitulo(String texto) {
+    return Padding(
+      padding: const EdgeInsets.only(left: 4, bottom: 8),
+      child: Text(
+        texto,
+        style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+      ),
+    );
+  }
+
+  // Mapa con la ubicación actual. Tiene 3 estados:
+  // buscando, error (con opción de reintentar) y listo (muestra el mapa)
+  Widget _crearUbicacion() {
+    if (_buscandoUbicacion) {
+      return const Card(
+        child: ListTile(
+          leading: SizedBox(
+            width: 24,
+            height: 24,
+            child: CircularProgressIndicator(strokeWidth: 2),
+          ),
+          title: Text('Obteniendo tu ubicación...'),
+        ),
+      );
+    }
+
+    if (_errorUbicacion != null) {
+      return Card(
+        child: Padding(
+          padding: const EdgeInsets.all(12),
+          child: Column(
+            children: [
+              ListTile(
+                leading: const Icon(Icons.location_off, color: Colors.red),
+                title: Text(_errorUbicacion!.mensaje),
+              ),
+              Row(
+                mainAxisAlignment: MainAxisAlignment.end,
+                children: [
+                  if (_errorUbicacion!.permanente)
+                    TextButton(
+                      onPressed: ubicacionService.abrirAjustes,
+                      child: const Text('Abrir ajustes'),
+                    ),
+                  TextButton.icon(
+                    onPressed: _buscarUbicacion,
+                    icon: const Icon(Icons.refresh),
+                    label: const Text('Reintentar'),
+                  ),
+                ],
+              ),
+            ],
+          ),
+        ),
+      );
+    }
+
+    if (_ubicacion == null) return const SizedBox.shrink();
+
+    return Column(
+      children: [
+        // La key hace que el mapa se vuelva a centrar si cambia la ubicación
+        MapaUbicacion(key: ValueKey(_ubicacion), punto: _ubicacion!),
+        Align(
+          alignment: Alignment.centerRight,
+          child: TextButton.icon(
+            onPressed: _buscarUbicacion,
+            icon: const Icon(Icons.my_location),
+            label: const Text('Actualizar ubicación'),
+          ),
+        ),
+      ],
+    );
+  }
+
+  // Mientras se envía deshabilito el botón y muestro el circulito,
+  // así no se manda dos veces el mismo reclamo
+  Widget _crearBoton() {
+    return FilledButton.icon(
+      style: FilledButton.styleFrom(
+        padding: const EdgeInsets.symmetric(vertical: 16),
+      ),
+      icon: _enviando
+          ? const SizedBox(
+              width: 20,
+              height: 20,
+              child: CircularProgressIndicator(strokeWidth: 2),
+            )
+          : const Icon(Icons.send),
+      label: Text(_enviando ? 'Enviando...' : 'Enviar reclamo'),
+      onPressed: _enviando ? null : _enviarReclamo,
+    );
+  }
+
+  // ===== DIÁLOGOS Y AVISOS =====
   // Si falló el envío, el formulario queda como estaba para reintentar
   void _mostrarError(String mensaje) {
     showDialog(

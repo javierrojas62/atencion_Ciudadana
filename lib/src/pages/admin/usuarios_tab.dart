@@ -15,11 +15,13 @@ class UsuariosTab extends StatefulWidget {
 }
 
 class _UsuariosTabState extends State<UsuariosTab> {
+  // ===== VARIABLES DE ESTADO =====
   late Future<List<UsuarioModel>> _usuarios = adminProvider.usuarios();
 
   // 'todos', 'vecino' u 'operario'
   String _filtro = 'todos';
 
+  // ===== LLAMADAS Y ACCIONES =====
   Future<void> _recargar() async {
     setState(() {
       _usuarios = adminProvider.usuarios();
@@ -27,6 +29,45 @@ class _UsuariosTabState extends State<UsuariosTab> {
     await _usuarios;
   }
 
+  Future<void> _crear() async {
+    final creado = await showDialog<bool>(
+      context: context,
+      barrierDismissible: false,
+      builder: (_) => const UsuarioFormDialog(),
+    );
+    if (creado == true) {
+      _avisar('Usuario creado');
+      _recargar();
+    }
+  }
+
+  Future<void> _editar(UsuarioModel usuario) async {
+    final editado = await showDialog<bool>(
+      context: context,
+      barrierDismissible: false,
+      builder: (_) => UsuarioFormDialog(usuario: usuario),
+    );
+    if (editado == true) {
+      _avisar('Cambios guardados');
+      _recargar();
+    }
+  }
+
+  Future<void> _cambiarEstado(UsuarioModel usuario, bool activo) async {
+    try {
+      await adminProvider.cambiarEstadoUsuario(usuario.id, activo);
+      _avisar(
+        activo
+            ? '${usuario.nombreCompleto} fue activado'
+            : '${usuario.nombreCompleto} fue desactivado y ya no puede entrar',
+      );
+      _recargar();
+    } on AdminException catch (e) {
+      _avisar(e.mensaje);
+    }
+  }
+
+  // ===== BUILD =====
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -82,6 +123,7 @@ class _UsuariosTabState extends State<UsuariosTab> {
     );
   }
 
+  // ===== WIDGETS =====
   Widget _crearFiltro() {
     return Padding(
       padding: const EdgeInsets.only(bottom: 12),
@@ -95,6 +137,17 @@ class _UsuariosTabState extends State<UsuariosTab> {
         onSelectionChanged: (seleccion) {
           setState(() => _filtro = seleccion.first);
         },
+      ),
+    );
+  }
+
+  Widget _crearMensaje(String texto) {
+    return Padding(
+      padding: const EdgeInsets.all(40),
+      child: Text(
+        texto,
+        textAlign: TextAlign.center,
+        style: TextStyle(fontSize: 16, color: Colors.grey.shade600),
       ),
     );
   }
@@ -151,6 +204,23 @@ class _UsuariosTabState extends State<UsuariosTab> {
               )
               .toList(),
         ),
+      ),
+    );
+  }
+
+  // Etiqueta de color con el rol
+  Widget _crearEtiquetaRol(UsuarioModel usuario) {
+    final color = usuario.esVecino ? Colors.teal : Colors.indigo;
+
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+      decoration: BoxDecoration(
+        color: color.withValues(alpha: 0.12),
+        borderRadius: BorderRadius.circular(10),
+      ),
+      child: Text(
+        usuario.rolTexto,
+        style: TextStyle(color: color, fontSize: 12),
       ),
     );
   }
@@ -217,76 +287,11 @@ class _UsuariosTabState extends State<UsuariosTab> {
     );
   }
 
-  // Etiqueta de color con el rol
-  Widget _crearEtiquetaRol(UsuarioModel usuario) {
-    final color = usuario.esVecino ? Colors.teal : Colors.indigo;
-
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
-      decoration: BoxDecoration(
-        color: color.withValues(alpha: 0.12),
-        borderRadius: BorderRadius.circular(10),
-      ),
-      child: Text(
-        usuario.rolTexto,
-        style: TextStyle(color: color, fontSize: 12),
-      ),
-    );
-  }
-
-  Future<void> _crear() async {
-    final creado = await showDialog<bool>(
-      context: context,
-      barrierDismissible: false,
-      builder: (_) => const UsuarioFormDialog(),
-    );
-    if (creado == true) {
-      _avisar('Usuario creado');
-      _recargar();
-    }
-  }
-
-  Future<void> _editar(UsuarioModel usuario) async {
-    final editado = await showDialog<bool>(
-      context: context,
-      barrierDismissible: false,
-      builder: (_) => UsuarioFormDialog(usuario: usuario),
-    );
-    if (editado == true) {
-      _avisar('Cambios guardados');
-      _recargar();
-    }
-  }
-
-  Future<void> _cambiarEstado(UsuarioModel usuario, bool activo) async {
-    try {
-      await adminProvider.cambiarEstadoUsuario(usuario.id, activo);
-      _avisar(
-        activo
-            ? '${usuario.nombreCompleto} fue activado'
-            : '${usuario.nombreCompleto} fue desactivado y ya no puede entrar',
-      );
-      _recargar();
-    } on AdminException catch (e) {
-      _avisar(e.mensaje);
-    }
-  }
-
+  // ===== DIÁLOGOS Y AVISOS =====
   void _avisar(String mensaje) {
     if (!mounted) return;
     ScaffoldMessenger.of(
       context,
     ).showSnackBar(SnackBar(content: Text(mensaje)));
-  }
-
-  Widget _crearMensaje(String texto) {
-    return Padding(
-      padding: const EdgeInsets.all(40),
-      child: Text(
-        texto,
-        textAlign: TextAlign.center,
-        style: TextStyle(fontSize: 16, color: Colors.grey.shade600),
-      ),
-    );
   }
 }

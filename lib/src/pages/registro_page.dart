@@ -14,12 +14,17 @@ class RegistroPage extends StatefulWidget {
 }
 
 class _RegistroPageState extends State<RegistroPage> {
+  // ===== VARIABLES DE ESTADO =====
   final _formKey = GlobalKey<FormState>();
 
   final _nombreController = TextEditingController();
+
   final _apellidoController = TextEditingController();
+
   final _emailController = TextEditingController();
+
   final _passwordController = TextEditingController();
+
   final _parcelaController = TextEditingController();
 
   // Los barrios se piden una sola vez al abrir la pantalla.
@@ -27,11 +32,14 @@ class _RegistroPageState extends State<RegistroPage> {
   // cada vez que se redibuja (por ejemplo al tocar el ojito).
   late final Future<List<BarrioModel>> _barrios =
       barriosProvider.cargarActivos();
+
   int? _barrioSeleccionado;
 
   bool _ocultarPassword = true;
+
   bool _cargando = false;
 
+  // ===== CICLO DE VIDA =====
   @override
   void dispose() {
     _nombreController.dispose();
@@ -42,6 +50,53 @@ class _RegistroPageState extends State<RegistroPage> {
     super.dispose();
   }
 
+  // ===== LLAMADAS Y ACCIONES =====
+  Future<void> _registrarse() async {
+    if (!_formKey.currentState!.validate()) return;
+
+    setState(() => _cargando = true);
+
+    try {
+      final perfil = await authProvider.registrarVecino(
+        nombre: _nombreController.text.trim(),
+        apellido: _apellidoController.text.trim(),
+        email: _emailController.text.trim(),
+        password: _passwordController.text,
+        barrioId: _barrioSeleccionado!,
+        parcela: _parcelaController.text.trim(),
+      );
+
+      if (!mounted) return;
+
+      // Supabase pide confirmar el email antes de poder entrar
+      if (perfil == null) {
+        _mostrarAlerta(
+          'Cuenta creada',
+          'Te enviamos un email para confirmar tu cuenta. '
+              'Cuando lo confirmes, iniciá sesión.',
+          irAlLogin: true,
+        );
+        return;
+      }
+
+      // Quedó logueado: lo saludo y lo llevo a su pantalla
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('¡Bienvenido, ${perfil.nombre}!')),
+      );
+      Navigator.pushNamedAndRemoveUntil(
+        context,
+        perfil.rutaInicio,
+        (route) => false,
+      );
+    } on LoginException catch (e) {
+      if (!mounted) return;
+      _mostrarAlerta('No se pudo crear la cuenta', e.mensaje);
+    } finally {
+      if (mounted) setState(() => _cargando = false);
+    }
+  }
+
+  // ===== BUILD =====
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -104,6 +159,7 @@ class _RegistroPageState extends State<RegistroPage> {
     );
   }
 
+  // ===== WIDGETS =====
   // Campo de texto común (nombre, apellido, parcela).
   // Lo armo una vez y lo reutilizo cambiando solo lo que necesito.
   Widget _crearCampo({
@@ -232,51 +288,7 @@ class _RegistroPageState extends State<RegistroPage> {
     );
   }
 
-  Future<void> _registrarse() async {
-    if (!_formKey.currentState!.validate()) return;
-
-    setState(() => _cargando = true);
-
-    try {
-      final perfil = await authProvider.registrarVecino(
-        nombre: _nombreController.text.trim(),
-        apellido: _apellidoController.text.trim(),
-        email: _emailController.text.trim(),
-        password: _passwordController.text,
-        barrioId: _barrioSeleccionado!,
-        parcela: _parcelaController.text.trim(),
-      );
-
-      if (!mounted) return;
-
-      // Supabase pide confirmar el email antes de poder entrar
-      if (perfil == null) {
-        _mostrarAlerta(
-          'Cuenta creada',
-          'Te enviamos un email para confirmar tu cuenta. '
-              'Cuando lo confirmes, iniciá sesión.',
-          irAlLogin: true,
-        );
-        return;
-      }
-
-      // Quedó logueado: lo saludo y lo llevo a su pantalla
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('¡Bienvenido, ${perfil.nombre}!')),
-      );
-      Navigator.pushNamedAndRemoveUntil(
-        context,
-        perfil.rutaInicio,
-        (route) => false,
-      );
-    } on LoginException catch (e) {
-      if (!mounted) return;
-      _mostrarAlerta('No se pudo crear la cuenta', e.mensaje);
-    } finally {
-      if (mounted) setState(() => _cargando = false);
-    }
-  }
-
+  // ===== DIÁLOGOS Y AVISOS =====
   void _mostrarAlerta(String titulo, String mensaje, {bool irAlLogin = false}) {
     showDialog(
       context: context,
