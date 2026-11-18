@@ -6,6 +6,7 @@ final _icons = <String, IconData>{
   'add_road': Icons.add_road,
   'lightbulb': Icons.lightbulb,
   'delete': Icons.delete,
+  'help': Icons.help_outline, // categoría "Otro problema"
 };
 
 // Devuelve el ícono a partir del nombre. Si no lo encuentra muestra uno genérico.

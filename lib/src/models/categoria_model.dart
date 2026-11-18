@@ -24,4 +24,7 @@ class CategoriaModel {
       icono: json['icono'],
     );
   }
+
+  // "Otro problema": el vecino cuenta qué es porque no está en las opciones
+  bool get esOtro => slug == 'otro';
 }

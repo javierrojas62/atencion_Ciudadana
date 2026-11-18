@@ -30,6 +30,9 @@ class ReclamoPage extends StatefulWidget {
 class _ReclamoPageState extends State<ReclamoPage> {
   String _descripcion = '';
 
+  // Solo para la categoría "Otro": qué problema es (ej: árbol caído)
+  String _tipoOtro = '';
+
   // Foto del problema (en bytes, así sirve en el celular y en la web)
   Uint8List? _foto;
 
@@ -67,6 +70,11 @@ class _ReclamoPageState extends State<ReclamoPage> {
           const SizedBox(height: 20),
           _crearDropdown(),
           const SizedBox(height: 20),
+          // Si eligió "Otro", primero tiene que contar qué problema es
+          if (widget.categoria.esOtro) ...[
+            _crearTipoOtro(),
+            const SizedBox(height: 20),
+          ],
           _crearDescripcion(),
           const SizedBox(height: 20),
           _crearTitulo('Foto del problema'),
@@ -156,6 +164,24 @@ class _ReclamoPageState extends State<ReclamoPage> {
             ),
           ],
         );
+      },
+    );
+  }
+
+  // Campo obligatorio de la categoría "Otro". Lo limito a 60 letras
+  // porque se muestra como título del reclamo.
+  Widget _crearTipoOtro() {
+    return TextField(
+      textCapitalization: TextCapitalization.sentences,
+      maxLength: 60,
+      decoration: const InputDecoration(
+        labelText: '¿Qué problema es?',
+        hintText: 'Ej: árbol caído',
+      ),
+      onChanged: (valor) {
+        setState(() {
+          _tipoOtro = valor;
+        });
       },
     );
   }
@@ -302,6 +328,12 @@ class _ReclamoPageState extends State<ReclamoPage> {
       return;
     }
 
+    // En "Otro" tiene que contar qué es (la base también lo controla)
+    if (widget.categoria.esOtro && _tipoOtro.trim().isEmpty) {
+      _avisar('Contá qué tipo de problema es');
+      return;
+    }
+
     // Sin descripción no lo dejo enviar
     if (_descripcion.trim().isEmpty) {
       _avisar('Escribí una descripción del problema');
@@ -328,6 +360,7 @@ class _ReclamoPageState extends State<ReclamoPage> {
         foto: _foto!,
         latitud: _ubicacion!.latitude,
         longitud: _ubicacion!.longitude,
+        tipoOtro: widget.categoria.esOtro ? _tipoOtro.trim() : null,
       );
     } on ReclamoException catch (e) {
       // Aviso en la barra de notificaciones del celular
@@ -349,12 +382,17 @@ class _ReclamoPageState extends State<ReclamoPage> {
         .firstWhere((b) => b.id == _barrioSeleccionado)
         .nombre;
 
+    // En "Otro" muestro lo que escribió el vecino en lugar de "Otro problema"
+    final tipo = widget.categoria.esOtro
+        ? _tipoOtro.trim()
+        : widget.categoria.nombre;
+
     // Aviso en la barra de notificaciones del celular
     NotificationService().showInstantNotification(
       id: 1,
       title: 'Reclamo enviado',
       body:
-          'Tu reclamo de "${widget.categoria.nombre}" en $nombreBarrio '
+          'Tu reclamo de "$tipo" en $nombreBarrio '
           'quedó pendiente.',
     );
 
@@ -377,7 +415,7 @@ class _ReclamoPageState extends State<ReclamoPage> {
               const Icon(Icons.check_circle, color: Colors.green, size: 60),
               const SizedBox(height: 12),
               Text(
-                'Tu reclamo de "${widget.categoria.nombre}" en $nombreBarrio '
+                'Tu reclamo de "$tipo" en $nombreBarrio '
                 'quedó en estado pendiente.',
                 textAlign: TextAlign.center,
               ),

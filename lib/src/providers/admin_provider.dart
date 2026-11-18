@@ -37,7 +37,7 @@ class AdminProvider {
     final datos = await _supabase
         .from('reclamos')
         .select(
-          'id, resuelto_en, hash_inicial, hash_cierre, '
+          'id, tipo_otro, resuelto_en, hash_inicial, hash_cierre, '
           'categorias(nombre), barrios(nombre), '
           'operario:perfiles!reclamos_operario_id_fkey(nombre, apellido)',
         )

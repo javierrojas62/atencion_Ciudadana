@@ -8,6 +8,7 @@ class ReclamoModel {
   final String categoriaIcono;
   final String barrio;
   final String descripcion;
+  final String? tipoOtro; // solo en la categoría "Otro"
   final String fotoUrl;
   final double latitud;
   final double longitud;
@@ -19,6 +20,7 @@ class ReclamoModel {
     required this.categoriaIcono,
     required this.barrio,
     required this.descripcion,
+    this.tipoOtro,
     required this.fotoUrl,
     required this.latitud,
     required this.longitud,
@@ -37,12 +39,17 @@ class ReclamoModel {
       categoriaIcono: categoria?['icono'] ?? '',
       barrio: barrio?['nombre'] ?? '',
       descripcion: json['descripcion'],
+      tipoOtro: json['tipo_otro'],
       fotoUrl: json['foto_url'],
       latitud: (json['latitud'] as num).toDouble(),
       longitud: (json['longitud'] as num).toDouble(),
       creadoEn: DateTime.parse(json['creado_en']).toLocal(),
     );
   }
+
+  // Título para mostrar en listas y detalles:
+  // en "Otro" uso lo que escribió el vecino, en el resto la categoría
+  String get titulo => tipoOtro != null ? 'Otro: $tipoOtro' : categoria;
 
   // Punto para el mapa
   LatLng get punto => LatLng(latitud, longitud);

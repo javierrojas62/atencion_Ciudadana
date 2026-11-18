@@ -22,7 +22,7 @@ class ReclamosProvider {
   // Columnas que trae cada reclamo, junto con el nombre de su
   // categoría y de su barrio (Supabase une las tablas solo)
   static const String _columnas =
-      'id, descripcion, foto_url, latitud, longitud, creado_en, '
+      'id, descripcion, tipo_otro, foto_url, latitud, longitud, creado_en, '
       'categorias(nombre, icono), barrios(nombre)';
 
   // ---------------------------------------------------------------------
@@ -40,6 +40,7 @@ class ReclamosProvider {
     required Uint8List foto,
     required double latitud,
     required double longitud,
+    String? tipoOtro, // solo para la categoría "Otro"
   }) async {
     final vecinoId = _supabase.auth.currentUser!.id;
 
@@ -52,8 +53,8 @@ class ReclamosProvider {
     }
 
     // 2) Guardar el reclamo.
-    // No pido que me devuelva la fila (.select()) porque el vecino
-    // no tiene permiso para leer reclamos: no ve historial.
+    // No pido que me devuelva la fila (.select()) porque no la necesito:
+    // el estado, la fecha y el hash los pone la base.
     try {
       await _supabase.from('reclamos').insert({
         'vecino_id': vecinoId,
@@ -63,7 +64,14 @@ class ReclamosProvider {
         'foto_url': fotoUrl,
         'latitud': latitud,
         'longitud': longitud,
+        'tipo_otro': tipoOtro,
       });
+    } on PostgrestException catch (e) {
+      // Si es "Otro" sin decir qué es, la base lo rechaza con este mensaje
+      if (e.message.contains('Contá qué tipo de problema es')) {
+        throw ReclamoException('Contá qué tipo de problema es.');
+      }
+      throw ReclamoException('No se pudo guardar el reclamo. Intentá de nuevo.');
     } catch (_) {
       throw ReclamoException('No se pudo guardar el reclamo. Intentá de nuevo.');
     }

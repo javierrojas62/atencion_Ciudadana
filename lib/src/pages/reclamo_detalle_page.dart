@@ -114,7 +114,7 @@ class _ReclamoDetallePageState extends State<ReclamoDetallePage> {
           child: getIcon(reclamo.categoriaIcono),
         ),
         title: Text(
-          reclamo.categoria,
+          reclamo.titulo,
           style: const TextStyle(fontWeight: FontWeight.bold),
         ),
         subtitle: Text('${reclamo.barrio} · ${reclamo.fecha}'),

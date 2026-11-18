@@ -69,9 +69,14 @@ class ReclamoResueltoModel {
     final barrio = json['barrios'] as Map<String, dynamic>?;
     final operario = json['operario'] as Map<String, dynamic>?;
 
+    // En "Otro" muestro lo que escribió el vecino en lugar de la categoría
+    final String? tipoOtro = json['tipo_otro'];
+
     return ReclamoResueltoModel(
       id: json['id'],
-      categoria: categoria?['nombre'] ?? 'Sin categoría',
+      categoria: tipoOtro != null
+          ? 'Otro: $tipoOtro'
+          : categoria?['nombre'] ?? 'Sin categoría',
       barrio: barrio?['nombre'] ?? '',
       operario: operario == null
           ? '-'

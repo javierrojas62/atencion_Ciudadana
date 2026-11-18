@@ -89,7 +89,7 @@ class _OperarioBarrioPageState extends State<OperarioBarrioPage> {
           ),
         ),
         title: Text(
-          reclamo.categoria,
+          reclamo.titulo,
           style: const TextStyle(fontWeight: FontWeight.bold),
         ),
         subtitle: Column(
