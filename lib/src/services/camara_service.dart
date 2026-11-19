@@ -1,4 +1,3 @@
-import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:image_picker/image_picker.dart';
 import 'package:permission_handler/permission_handler.dart';
 
@@ -13,9 +12,6 @@ class CamaraService {
 
   // Pide el permiso de cámara con permission_handler
   Future<ResultadoPermiso> pedirPermisoCamara() async {
-    // En el navegador no hay permisos de Android: Chrome pregunta solo
-    if (kIsWeb) return ResultadoPermiso.otorgado;
-
     var status = await Permission.camera.status;
 
     if (status.isDenied) {

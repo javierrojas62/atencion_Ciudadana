@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 
 // Limita el ancho del contenido y lo centra.
-// En el celular no cambia nada; en Chrome evita que las listas
+// En el celular no cambia nada; en pantallas anchas evita que las listas
 // se estiren de punta a punta de la pantalla.
 class AnchoMaximo extends StatelessWidget {
   final Widget child;

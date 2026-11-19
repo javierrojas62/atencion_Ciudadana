@@ -1,4 +1,4 @@
-import 'package:flutter/foundation.dart' show kIsWeb, debugPrint;
+import 'package:flutter/foundation.dart' show debugPrint;
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:permission_handler/permission_handler.dart';
 
@@ -19,8 +19,7 @@ class NotificationService {
   bool get isInitialized => initialized;
 
   Future<void> init() async {
-    // En el navegador no hay notificaciones del sistema
-    if (kIsWeb || isInitialized) return;
+    if (isInitialized) return;
 
     // Configuración inicial para Android (usa el ícono de la app)
     const AndroidInitializationSettings initializationSettingsAndroid =
@@ -68,8 +67,6 @@ class NotificationService {
     String? title,
     String? body,
   }) async {
-    if (kIsWeb) return;
-
     // Si la notificación falla, no quiero que se rompa el resto de la app
     try {
       if (!isInitialized) {

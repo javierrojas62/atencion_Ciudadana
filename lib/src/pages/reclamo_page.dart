@@ -34,7 +34,7 @@ class _ReclamoPageState extends State<ReclamoPage> {
   // Solo para la categoría "Otro": qué problema es (ej: árbol caído)
   String _tipoOtro = '';
 
-  // Foto del problema (en bytes, así sirve en el celular y en la web)
+  // Foto del problema (en bytes)
   Uint8List? _foto;
 
   // Barrios de Rawson desde Supabase. Se piden una sola vez al abrir la pantalla.

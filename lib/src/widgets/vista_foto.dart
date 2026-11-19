@@ -4,8 +4,7 @@ import 'package:flutter/material.dart';
 
 // Recuadro para la foto: si todavía no hay foto muestra un botón para
 // sacarla, y si ya hay, la muestra con la opción de sacar otra.
-// Uso Image.memory (bytes) en lugar de Image.file porque así funciona
-// también en el navegador.
+// Uso Image.memory (bytes) en lugar de Image.file.
 class VistaFoto extends StatelessWidget {
   final Uint8List? foto;
   final VoidCallback onTomarFoto;
