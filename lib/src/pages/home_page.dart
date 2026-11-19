@@ -21,8 +21,6 @@ class _HomePageState extends State<HomePage> {
   // ===== BUILD =====
   @override
   Widget build(BuildContext context) {
-    final colores = Theme.of(context).colorScheme;
-
     return Scaffold(
       // SafeArea para que no se meta el contenido debajo de la barra de estado
       body: SafeArea(
@@ -33,74 +31,97 @@ class _HomePageState extends State<HomePage> {
             children: [
               const SizedBox(height: 40),
 
-              CircleAvatar(
-                radius: 50,
-                backgroundColor: colores.primaryContainer,
-                child: Icon(
-                  Icons.location_city,
-                  size: 56,
-                  color: colores.primary,
-                ),
-              ),
+              _crearLogo(),
               const SizedBox(height: 24),
 
-              Text(
-                'Atención Ciudadana',
-                textAlign: TextAlign.center,
-                style: Theme.of(context).textTheme.headlineMedium?.copyWith(
-                  fontWeight: FontWeight.bold,
-                  color: colores.primary,
-                ),
-              ),
+              _crearTitulo(),
               const SizedBox(height: 12),
 
-              const Text(
-                'Reportá problemas en la vía pública de tu barrio. '
-                'Sacá una foto, mandá tu ubicación y seguí el estado '
-                'de tu reclamo hasta que se resuelva.',
-                textAlign: TextAlign.center,
-                style: TextStyle(fontSize: 16),
-              ),
+              _crearDescripcion(),
               const SizedBox(height: 32),
 
-              // Chips con las categorías. Uso Wrap para que si no entran en una fila pasen solas a la siguiente.
-              Wrap(
-                alignment: WrapAlignment.center,
-                spacing: 8,
-                runSpacing: 8,
-                children: _categorias
-                    .map(
-                      (cat) => Chip(
-                        avatar: Icon(cat['icono'], size: 18),
-                        label: Text(cat['nombre']),
-                      ),
-                    )
-                    .toList(),
-              ),
+              _crearCategorias(),
               const SizedBox(height: 48),
 
-              // Botón principal: va a la pantalla de login (ruta definida en routes.dart)
-              FilledButton(
-                style: FilledButton.styleFrom(
-                  padding: const EdgeInsets.symmetric(vertical: 16),
-                ),
-                onPressed: () => Navigator.pushNamed(context, 'login'),
-                child: const Text('Iniciar sesión'),
-              ),
+              _crearBotonIngresar(),
               const SizedBox(height: 12),
 
-              // Registro: solo para vecinos (a los operarios los crea el admin)
-              OutlinedButton(
-                style: OutlinedButton.styleFrom(
-                  padding: const EdgeInsets.symmetric(vertical: 16),
-                ),
-                onPressed: () => Navigator.pushNamed(context, 'registro'),
-                child: const Text('Registrarme'),
-              ),
+              _crearBotonRegistro(),
             ],
           ),
         ),
       ),
+    );
+  }
+
+  // ===== WIDGETS =====
+  Widget _crearLogo() {
+    final colores = Theme.of(context).colorScheme;
+
+    return CircleAvatar(
+      radius: 50,
+      backgroundColor: colores.primaryContainer,
+      child: Icon(Icons.location_city, size: 56, color: colores.primary),
+    );
+  }
+
+  Widget _crearTitulo() {
+    final colores = Theme.of(context).colorScheme;
+
+    return Text(
+      'Atención Ciudadana',
+      textAlign: TextAlign.center,
+      style: Theme.of(context).textTheme.headlineMedium
+          ?.copyWith(fontWeight: FontWeight.bold, color: colores.primary),
+    );
+  }
+
+  Widget _crearDescripcion() {
+    return const Text(
+      'Reportá problemas en la vía pública de tu barrio. '
+      'Sacá una foto, mandá tu ubicación y seguí el estado '
+      'de tu reclamo hasta que se resuelva.',
+      textAlign: TextAlign.center,
+      style: TextStyle(fontSize: 16),
+    );
+  }
+
+  // Chips con las categorías. Uso Wrap para que si no entran en una fila pasen solas a la siguiente.
+  Widget _crearCategorias() {
+    return Wrap(
+      alignment: WrapAlignment.center,
+      spacing: 8,
+      runSpacing: 8,
+      children: _categorias
+          .map(
+            (cat) => Chip(
+              avatar: Icon(cat['icono'], size: 18),
+              label: Text(cat['nombre']),
+            ),
+          )
+          .toList(),
+    );
+  }
+
+  // Botón principal: va a la pantalla de login (ruta definida en routes.dart)
+  Widget _crearBotonIngresar() {
+    return FilledButton(
+      style: FilledButton.styleFrom(
+        padding: const EdgeInsets.symmetric(vertical: 16),
+      ),
+      onPressed: () => Navigator.pushNamed(context, 'login'),
+      child: const Text('Iniciar sesión'),
+    );
+  }
+
+  // Registro: solo para vecinos (a los operarios los crea el admin)
+  Widget _crearBotonRegistro() {
+    return OutlinedButton(
+      style: OutlinedButton.styleFrom(
+        padding: const EdgeInsets.symmetric(vertical: 16),
+      ),
+      onPressed: () => Navigator.pushNamed(context, 'registro'),
+      child: const Text('Registrarme'),
     );
   }
 }

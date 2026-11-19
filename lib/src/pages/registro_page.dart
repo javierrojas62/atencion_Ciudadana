@@ -27,8 +27,8 @@ class _RegistroPageState extends State<RegistroPage> {
   final _parcelaController = TextEditingController();
 
   // Los barrios se piden una sola vez al abrir la pantalla.
-  late final Future<List<BarrioModel>> _barrios =
-      barriosProvider.cargarActivos();
+  late final Future<List<BarrioModel>> _barrios = barriosProvider
+      .cargarActivos();
 
   int? _barrioSeleccionado;
 
@@ -77,9 +77,9 @@ class _RegistroPageState extends State<RegistroPage> {
       }
 
       // Quedó logueado: lo saludo y lo llevo a su pantalla
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('¡Bienvenido, ${perfil.nombre}!')),
-      );
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text('¡Bienvenido, ${perfil.nombre}!')));
       Navigator.pushNamedAndRemoveUntil(
         context,
         perfil.rutaInicio,
@@ -139,17 +139,7 @@ class _RegistroPageState extends State<RegistroPage> {
             _crearBoton(),
             const SizedBox(height: 8),
 
-            Row(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                const Text('¿Ya tenés cuenta?'),
-                TextButton(
-                  onPressed: () =>
-                      Navigator.pushReplacementNamed(context, 'login'),
-                  child: const Text('Iniciá sesión'),
-                ),
-              ],
-            ),
+            _crearLinkLogin(),
           ],
         ),
       ),
@@ -282,6 +272,19 @@ class _RegistroPageState extends State<RegistroPage> {
               child: CircularProgressIndicator(strokeWidth: 2),
             )
           : const Text('Crear cuenta'),
+    );
+  }
+
+  Widget _crearLinkLogin() {
+    return Row(
+      mainAxisAlignment: MainAxisAlignment.center,
+      children: [
+        const Text('¿Ya tenés cuenta?'),
+        TextButton(
+          onPressed: () => Navigator.pushReplacementNamed(context, 'login'),
+          child: const Text('Iniciá sesión'),
+        ),
+      ],
     );
   }
 

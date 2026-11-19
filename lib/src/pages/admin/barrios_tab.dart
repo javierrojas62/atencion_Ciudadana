@@ -75,45 +75,46 @@ class _BarriosTabState extends State<BarriosTab> {
       ),
       body: AnchoMaximo(
         ancho: 700,
-        child: RefreshIndicator(
-          onRefresh: _recargar,
-          child: FutureBuilder<List<BarrioModel>>(
-            future: _barrios,
-            builder: (context, snapshot) {
-              final List<Widget> items = [];
-
-              if (snapshot.hasError) {
-                items.add(
-                  _crearMensaje(
-                    'No se pudieron cargar los barrios. Deslizá hacia abajo para reintentar.',
-                  ),
-                );
-              } else if (!snapshot.hasData) {
-                items.add(
-                  const Padding(
-                    padding: EdgeInsets.all(40),
-                    child: Center(child: CircularProgressIndicator()),
-                  ),
-                );
-              } else if (snapshot.data!.isEmpty) {
-                items.add(_crearMensaje('Todavía no hay barrios cargados.'));
-              } else {
-                items.addAll(snapshot.data!.map(_crearTarjeta));
-              }
-
-              return ListView(
-                physics: const AlwaysScrollableScrollPhysics(),
-                padding: const EdgeInsets.fromLTRB(16, 16, 16, 90),
-                children: items,
-              );
-            },
-          ),
-        ),
+        child: RefreshIndicator(onRefresh: _recargar, child: _lista()),
       ),
     );
   }
 
   // ===== WIDGETS =====
+  Widget _lista() {
+    return FutureBuilder<List<BarrioModel>>(
+      future: _barrios,
+      builder: (context, snapshot) {
+        final List<Widget> items = [];
+
+        if (snapshot.hasError) {
+          items.add(
+            _crearMensaje(
+              'No se pudieron cargar los barrios. Deslizá hacia abajo para reintentar.',
+            ),
+          );
+        } else if (!snapshot.hasData) {
+          items.add(
+            const Padding(
+              padding: EdgeInsets.all(40),
+              child: Center(child: CircularProgressIndicator()),
+            ),
+          );
+        } else if (snapshot.data!.isEmpty) {
+          items.add(_crearMensaje('Todavía no hay barrios cargados.'));
+        } else {
+          items.addAll(snapshot.data!.map(_crearTarjeta));
+        }
+
+        return ListView(
+          physics: const AlwaysScrollableScrollPhysics(),
+          padding: const EdgeInsets.fromLTRB(16, 16, 16, 90),
+          children: items,
+        );
+      },
+    );
+  }
+
   Widget _crearMensaje(String texto) {
     return Padding(
       padding: const EdgeInsets.all(40),
@@ -170,8 +171,7 @@ class _BarriosTabState extends State<BarriosTab> {
   // ===== DIÁLOGOS Y AVISOS =====
   void _avisar(String mensaje) {
     if (!mounted) return;
-    ScaffoldMessenger.of(
-      context,
-    ).showSnackBar(SnackBar(content: Text(mensaje)));
+    ScaffoldMessenger.of(context)
+        .showSnackBar(SnackBar(content: Text(mensaje)));
   }
 }

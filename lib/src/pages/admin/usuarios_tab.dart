@@ -78,52 +78,53 @@ class _UsuariosTabState extends State<UsuariosTab> {
         label: const Text('Nuevo usuario'),
       ),
       body: AnchoMaximo(
-        child: RefreshIndicator(
-          onRefresh: _recargar,
-          child: FutureBuilder<List<UsuarioModel>>(
-            future: _usuarios,
-            builder: (context, snapshot) {
-              final List<Widget> items = [_crearFiltro()];
-
-              if (snapshot.hasError) {
-                items.add(
-                  _crearMensaje(
-                    'No se pudieron cargar los usuarios. Deslizá hacia abajo para reintentar.',
-                  ),
-                );
-              } else if (!snapshot.hasData) {
-                items.add(
-                  const Padding(
-                    padding: EdgeInsets.all(40),
-                    child: Center(child: CircularProgressIndicator()),
-                  ),
-                );
-              } else {
-                final usuarios = snapshot.data!
-                    .where((u) => _filtro == 'todos' || u.rol == _filtro)
-                    .toList();
-
-                if (usuarios.isEmpty) {
-                  items.add(_crearMensaje('No hay usuarios para mostrar.'));
-                } else {
-                  items.add(_crearLista(usuarios));
-                }
-              }
-
-              return ListView(
-                physics: const AlwaysScrollableScrollPhysics(),
-                // Espacio abajo para que el botón flotante no tape el último
-                padding: const EdgeInsets.fromLTRB(16, 16, 16, 90),
-                children: items,
-              );
-            },
-          ),
-        ),
+        child: RefreshIndicator(onRefresh: _recargar, child: _lista()),
       ),
     );
   }
 
   // ===== WIDGETS =====
+  Widget _lista() {
+    return FutureBuilder<List<UsuarioModel>>(
+      future: _usuarios,
+      builder: (context, snapshot) {
+        final List<Widget> items = [_crearFiltro()];
+
+        if (snapshot.hasError) {
+          items.add(
+            _crearMensaje(
+              'No se pudieron cargar los usuarios. Deslizá hacia abajo para reintentar.',
+            ),
+          );
+        } else if (!snapshot.hasData) {
+          items.add(
+            const Padding(
+              padding: EdgeInsets.all(40),
+              child: Center(child: CircularProgressIndicator()),
+            ),
+          );
+        } else {
+          final usuarios = snapshot.data!
+              .where((u) => _filtro == 'todos' || u.rol == _filtro)
+              .toList();
+
+          if (usuarios.isEmpty) {
+            items.add(_crearMensaje('No hay usuarios para mostrar.'));
+          } else {
+            items.add(_crearLista(usuarios));
+          }
+        }
+
+        return ListView(
+          physics: const AlwaysScrollableScrollPhysics(),
+          // Espacio abajo para que el botón flotante no tape el último
+          padding: const EdgeInsets.fromLTRB(16, 16, 16, 90),
+          children: items,
+        );
+      },
+    );
+  }
+
   Widget _crearFiltro() {
     return Padding(
       padding: const EdgeInsets.only(bottom: 12),
@@ -288,8 +289,7 @@ class _UsuariosTabState extends State<UsuariosTab> {
   // ===== DIÁLOGOS Y AVISOS =====
   void _avisar(String mensaje) {
     if (!mounted) return;
-    ScaffoldMessenger.of(
-      context,
-    ).showSnackBar(SnackBar(content: Text(mensaje)));
+    ScaffoldMessenger.of(context)
+        .showSnackBar(SnackBar(content: Text(mensaje)));
   }
 }

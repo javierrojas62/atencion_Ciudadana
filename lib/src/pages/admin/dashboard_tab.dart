@@ -52,48 +52,49 @@ class _DashboardTabState extends State<DashboardTab> {
   @override
   Widget build(BuildContext context) {
     return AnchoMaximo(
-      child: RefreshIndicator(
-        onRefresh: _recargar,
-        child: FutureBuilder<_DatosDashboard>(
-          future: _datos,
-          builder: (context, snapshot) {
-            if (snapshot.hasError) {
-              return _crearMensaje(
-                'No se pudieron cargar los datos. Deslizá hacia abajo para reintentar.',
-              );
-            }
-            if (!snapshot.hasData) {
-              return const Center(child: CircularProgressIndicator());
-            }
-
-            final datos = snapshot.data!;
-
-            return ListView(
-              physics: const AlwaysScrollableScrollPhysics(),
-              padding: const EdgeInsets.all(16),
-              children: [
-                _crearTotales(datos.resumen),
-                const SizedBox(height: 24),
-                _crearTitulo('Reclamos resueltos por operario'),
-                _crearTablaOperarios(datos.operarios),
-                const SizedBox(height: 24),
-                _crearTitulo('Últimos reclamos resueltos'),
-                if (datos.resueltos.isEmpty)
-                  const Card(
-                    child: ListTile(
-                      title: Text('Todavía no hay reclamos resueltos.'),
-                    ),
-                  ),
-                ...datos.resueltos.map(_crearTarjetaResuelto),
-              ],
-            );
-          },
-        ),
-      ),
+      child: RefreshIndicator(onRefresh: _recargar, child: _lista()),
     );
   }
 
   // ===== WIDGETS =====
+  Widget _lista() {
+    return FutureBuilder<_DatosDashboard>(
+      future: _datos,
+      builder: (context, snapshot) {
+        if (snapshot.hasError) {
+          return _crearMensaje(
+            'No se pudieron cargar los datos. Deslizá hacia abajo para reintentar.',
+          );
+        }
+        if (!snapshot.hasData) {
+          return const Center(child: CircularProgressIndicator());
+        }
+
+        final datos = snapshot.data!;
+
+        return ListView(
+          physics: const AlwaysScrollableScrollPhysics(),
+          padding: const EdgeInsets.all(16),
+          children: [
+            _crearTotales(datos.resumen),
+            const SizedBox(height: 24),
+            _crearTitulo('Reclamos resueltos por operario'),
+            _crearTablaOperarios(datos.operarios),
+            const SizedBox(height: 24),
+            _crearTitulo('Últimos reclamos resueltos'),
+            if (datos.resueltos.isEmpty)
+              const Card(
+                child: ListTile(
+                  title: Text('Todavía no hay reclamos resueltos.'),
+                ),
+              ),
+            ...datos.resueltos.map(_crearTarjetaResuelto),
+          ],
+        );
+      },
+    );
+  }
+
   Widget _crearMensaje(String texto) {
     return ListView(
       physics: const AlwaysScrollableScrollPhysics(),

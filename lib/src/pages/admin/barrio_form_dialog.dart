@@ -77,22 +77,7 @@ class _BarrioFormDialogState extends State<BarrioFormDialog> {
             mainAxisSize: MainAxisSize.min,
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
-              TextFormField(
-                controller: _nombreController,
-                autofocus: true,
-                textCapitalization: TextCapitalization.words,
-                decoration: const InputDecoration(
-                  labelText: 'Nombre del barrio',
-                  hintText: 'Ej: Barrio Los Álamos',
-                  prefixIcon: Icon(Icons.location_city),
-                ),
-                validator: (value) {
-                  if (value == null || value.trim().isEmpty) {
-                    return 'Escribí el nombre del barrio';
-                  }
-                  return null;
-                },
-              ),
+              _crearNombre(),
               if (_error != null) ...[
                 const SizedBox(height: 16),
                 Text(_error!, style: const TextStyle(color: Colors.red)),
@@ -106,17 +91,41 @@ class _BarrioFormDialogState extends State<BarrioFormDialog> {
           onPressed: _guardando ? null : () => Navigator.of(context).pop(false),
           child: const Text('Cancelar'),
         ),
-        FilledButton(
-          onPressed: _guardando ? null : _guardar,
-          child: _guardando
-              ? const SizedBox(
-                  width: 20,
-                  height: 20,
-                  child: CircularProgressIndicator(strokeWidth: 2),
-                )
-              : const Text('Guardar'),
-        ),
+        _crearBotonGuardar(),
       ],
+    );
+  }
+
+  // ===== WIDGETS =====
+  Widget _crearNombre() {
+    return TextFormField(
+      controller: _nombreController,
+      autofocus: true,
+      textCapitalization: TextCapitalization.words,
+      decoration: const InputDecoration(
+        labelText: 'Nombre del barrio',
+        hintText: 'Ej: Barrio Los Álamos',
+        prefixIcon: Icon(Icons.location_city),
+      ),
+      validator: (value) {
+        if (value == null || value.trim().isEmpty) {
+          return 'Escribí el nombre del barrio';
+        }
+        return null;
+      },
+    );
+  }
+
+  Widget _crearBotonGuardar() {
+    return FilledButton(
+      onPressed: _guardando ? null : _guardar,
+      child: _guardando
+          ? const SizedBox(
+              width: 20,
+              height: 20,
+              child: CircularProgressIndicator(strokeWidth: 2),
+            )
+          : const Text('Guardar'),
     );
   }
 }

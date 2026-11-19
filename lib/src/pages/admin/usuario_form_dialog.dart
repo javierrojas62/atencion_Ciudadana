@@ -179,16 +179,7 @@ class _UsuarioFormDialogState extends State<UsuarioFormDialog> {
           onPressed: _guardando ? null : () => Navigator.of(context).pop(false),
           child: const Text('Cancelar'),
         ),
-        FilledButton(
-          onPressed: _guardando ? null : _guardar,
-          child: _guardando
-              ? const SizedBox(
-                  width: 20,
-                  height: 20,
-                  child: CircularProgressIndicator(strokeWidth: 2),
-                )
-              : const Text('Guardar'),
-        ),
+        _crearBotonGuardar(),
       ],
     );
   }
@@ -315,6 +306,19 @@ class _UsuarioFormDialogState extends State<UsuarioFormDialog> {
           validator: (valor) => valor == null ? 'Elegí el barrio' : null,
         );
       },
+    );
+  }
+
+  Widget _crearBotonGuardar() {
+    return FilledButton(
+      onPressed: _guardando ? null : _guardar,
+      child: _guardando
+          ? const SizedBox(
+              width: 20,
+              height: 20,
+              child: CircularProgressIndicator(strokeWidth: 2),
+            )
+          : const Text('Guardar'),
     );
   }
 }
