@@ -39,7 +39,6 @@ class _MiReclamoDetallePageState extends State<MiReclamoDetallePage> {
     final formKey = GlobalKey<FormState>();
     final esOtro = reclamo.tipoOtro != null;
 
-    // Arrancan con lo que ya tenía; el form los completa al guardar (onSaved)
     String descripcion = reclamo.descripcion;
     String tipoOtro = reclamo.tipoOtro ?? '';
 

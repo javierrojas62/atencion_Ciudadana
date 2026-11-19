@@ -6,8 +6,6 @@ import 'package:atencion_ciudadana/src/providers/reclamos_provider.dart';
 import 'package:atencion_ciudadana/src/widgets/boton_cerrar_sesion.dart';
 
 // Pantalla de inicio del operario.
-// Muestra los barrios que tienen reclamos pendientes, con la cantidad.
-// Al tocar uno, ve los reclamos de ese barrio.
 class OperarioPage extends StatefulWidget {
   const OperarioPage({super.key});
 

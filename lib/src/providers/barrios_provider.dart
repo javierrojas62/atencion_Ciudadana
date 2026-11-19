@@ -3,7 +3,6 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:atencion_ciudadana/src/models/barrio_model.dart';
 
 // Provider de barrios: los lee de Supabase.
-// Se puede usar sin iniciar sesión (lo necesita la pantalla de registro).
 class BarriosProvider {
   final _supabase = Supabase.instance.client;
 

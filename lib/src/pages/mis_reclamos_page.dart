@@ -4,8 +4,6 @@ import 'package:atencion_ciudadana/src/models/reclamo_model.dart';
 import 'package:atencion_ciudadana/src/providers/reclamos_provider.dart';
 
 // Historial del vecino: todos los reclamos que cargó, con su estado.
-// Se pueden filtrar por pendientes o resueltos. Al tocar uno abre el
-// detalle, donde ve el antes y después, o lo edita/elimina si sigue pendiente.
 class MisReclamosPage extends StatefulWidget {
   const MisReclamosPage({super.key});
 
@@ -21,8 +19,7 @@ class _MisReclamosPageState extends State<MisReclamosPage> {
   String _filtro = 'todos';
 
   // ===== LLAMADAS Y ACCIONES =====
-  // Vuelve a pedir los datos (al deslizar hacia abajo o al volver
-  // del detalle, porque puede haber editado o eliminado uno)
+  // Vuelve a pedir los datos (al deslizar hacia abajo o al volver del detalle porque puede haber editado o eliminado uno)
   Future<void> _recargar() async {
     setState(() {
       _reclamos = reclamosProvider.misReclamos();

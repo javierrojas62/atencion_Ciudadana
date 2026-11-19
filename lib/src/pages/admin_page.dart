@@ -6,8 +6,6 @@ import 'package:atencion_ciudadana/src/pages/admin/usuarios_tab.dart';
 import 'package:atencion_ciudadana/src/widgets/boton_cerrar_sesion.dart';
 
 // Pantalla del administrador.
-// Solo arma las 3 pestañas; cada una está en su propio archivo
-// dentro de la carpeta pages/admin.
 class AdminPage extends StatelessWidget {
   const AdminPage({super.key});
 

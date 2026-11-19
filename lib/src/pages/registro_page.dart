@@ -5,7 +5,6 @@ import 'package:atencion_ciudadana/src/providers/auth_provider.dart';
 import 'package:atencion_ciudadana/src/providers/barrios_provider.dart';
 
 // Pantalla de registro. Solo la usan los vecinos:
-// a los operarios los crea el admin desde su panel.
 class RegistroPage extends StatefulWidget {
   const RegistroPage({super.key});
 
@@ -28,8 +27,6 @@ class _RegistroPageState extends State<RegistroPage> {
   final _parcelaController = TextEditingController();
 
   // Los barrios se piden una sola vez al abrir la pantalla.
-  // Si lo pusiera directo en el FutureBuilder, se volverían a pedir
-  // cada vez que se redibuja (por ejemplo al tocar el ojito).
   late final Future<List<BarrioModel>> _barrios =
       barriosProvider.cargarActivos();
 

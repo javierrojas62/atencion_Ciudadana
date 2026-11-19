@@ -5,7 +5,6 @@ import 'package:atencion_ciudadana/src/models/reclamo_model.dart';
 import 'package:atencion_ciudadana/src/providers/reclamos_provider.dart';
 
 // Reclamos pendientes de un barrio (vista del operario).
-// Al tocar uno abre el detalle, donde lo puede realizar.
 class OperarioBarrioPage extends StatefulWidget {
   final BarrioPendientesModel barrio;
 

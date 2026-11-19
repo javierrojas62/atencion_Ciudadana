@@ -1,8 +1,6 @@
 import 'package:flutter/material.dart';
 
-// Página principal (bienvenida).
-// Es lo primero que ve el usuario al abrir la app: explica de qué se trata
-// y le da las opciones de iniciar sesión o registrarse.
+// Página principal
 class HomePage extends StatefulWidget {
   const HomePage({super.key});
 
@@ -12,8 +10,7 @@ class HomePage extends StatefulWidget {
 
 class _HomePageState extends State<HomePage> {
   // ===== VARIABLES DE ESTADO =====
-  // Categorías de reclamos que se van a poder reportar.
-  // Las muestro acá como chips para que el vecino vea qué tipo de problemas puede cargar.
+  // Categorías de reclamos
   final List<Map<String, dynamic>> _categorias = [
     {'nombre': 'Cunetas', 'icono': Icons.water_damage},
     {'nombre': 'Baches', 'icono': Icons.add_road},
@@ -36,7 +33,6 @@ class _HomePageState extends State<HomePage> {
             children: [
               const SizedBox(height: 40),
 
-              // Logo provisorio con un ícono hasta tener uno propio
               CircleAvatar(
                 radius: 50,
                 backgroundColor: colores.primaryContainer,
@@ -67,8 +63,7 @@ class _HomePageState extends State<HomePage> {
               ),
               const SizedBox(height: 32),
 
-              // Chips con las categorías. Uso Wrap para que si no entran en
-              // una fila pasen solas a la siguiente.
+              // Chips con las categorías. Uso Wrap para que si no entran en una fila pasen solas a la siguiente.
               Wrap(
                 alignment: WrapAlignment.center,
                 spacing: 8,

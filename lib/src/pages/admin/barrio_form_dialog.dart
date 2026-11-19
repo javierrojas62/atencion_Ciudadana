@@ -4,7 +4,6 @@ import 'package:atencion_ciudadana/src/models/barrio_model.dart';
 import 'package:atencion_ciudadana/src/providers/admin_provider.dart';
 
 // Formulario para crear un barrio o cambiarle el nombre.
-// Devuelve true al cerrarse si se guardó algo.
 class BarrioFormDialog extends StatefulWidget {
   final BarrioModel? barrio;
 

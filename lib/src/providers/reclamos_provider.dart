@@ -11,16 +11,14 @@ class ReclamoException implements Exception {
   ReclamoException(this.mensaje);
 }
 
-// Provider de reclamos: todo lo que tiene que ver con la tabla reclamos
-// y las fotos en Storage.
+// Provider de reclamos: todo lo que tiene que ver con la tabla reclamos y las fotos en Storage.
 class ReclamosProvider {
   final _supabase = Supabase.instance.client;
 
   // Bucket de Storage donde se guardan las fotos
   static const String _bucket = 'reclamos';
 
-  // Columnas que trae cada reclamo, junto con el nombre de su
-  // categoría y de su barrio (Supabase une las tablas solo)
+  // Columnas que trae cada reclamo, junto con el nombre de su categoría y de su barrio (Supabase une las tablas solo)
   static const String _columnas =
       'id, descripcion, tipo_otro, foto_url, latitud, longitud, creado_en, '
       'estado, foto_reparacion_url, observacion, resuelto_en, '

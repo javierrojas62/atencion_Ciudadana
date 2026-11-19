@@ -3,8 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:atencion_ciudadana/src/providers/auth_provider.dart';
 
 // Pantalla de inicio de sesión.
-// Valida los campos, inicia sesión con Supabase y manda a cada usuario
-// a la pantalla de su rol (vecino, operario o admin).
+// Valida los campos, inicia sesión con Supabase
 class LoginPage extends StatefulWidget {
   const LoginPage({super.key});
 
@@ -49,8 +48,7 @@ class _LoginPageState extends State<LoginPage> {
       );
 
       if (!mounted) return;
-      // Voy a la pantalla de su rol y borro el historial,
-      // así con "atrás" no vuelve al login
+      // Voy a la pantalla de su rol y borro el historial así con "atrás" no vuelve al login
       Navigator.pushNamedAndRemoveUntil(
         context,
         perfil.rutaInicio,
@@ -79,7 +77,6 @@ class _LoginPageState extends State<LoginPage> {
           children: [
             const SizedBox(height: 24),
 
-            // Mismo estilo de logo que la HomePage
             CircleAvatar(
               radius: 45,
               backgroundColor: colores.primaryContainer,

@@ -5,9 +5,7 @@ import 'package:atencion_ciudadana/src/pages/admin/barrio_form_dialog.dart';
 import 'package:atencion_ciudadana/src/providers/admin_provider.dart';
 import 'package:atencion_ciudadana/src/widgets/ancho_maximo.dart';
 
-// Pestaña Barrios: el admin los crea, les cambia el nombre y los
-// activa o desactiva. Un barrio desactivado no aparece en el registro
-// ni en los reclamos nuevos, pero sus reclamos viejos se conservan.
+// Pestaña Barrios: el admin los crea, les cambia el nombre y los activa/desactiva
 class BarriosTab extends StatefulWidget {
   const BarriosTab({super.key});
 

@@ -7,8 +7,6 @@ import 'package:atencion_ciudadana/src/utils/icono_string_util.dart';
 import 'package:atencion_ciudadana/src/widgets/boton_cerrar_sesion.dart';
 
 // Pantalla a la que llega el vecino después del login.
-// Lo saluda por su nombre y muestra las categorías de reclamo que lee
-// de Supabase. Al tocar una abre la pantalla para cargar el reclamo.
 class ReclamosPage extends StatelessWidget {
   const ReclamosPage({super.key});
 
@@ -33,8 +31,7 @@ class ReclamosPage extends StatelessWidget {
   }
 
   // ===== WIDGETS =====
-  // El FutureBuilder espera a que el provider traiga las categorías
-  // y recién ahí dibuja la lista
+  // El FutureBuilder espera a que el provider traiga las categorías y recién ahí dibuja la lista
   Widget _lista() {
     return FutureBuilder<List<CategoriaModel>>(
       future: categoriasProvider.cargarData(),
@@ -97,8 +94,7 @@ class ReclamosPage extends StatelessWidget {
     );
   }
 
-  // Tarjeta para entrar al historial (además del botón del AppBar,
-  // así el vecino la encuentra fácil)
+  // Tarjeta para entrar al historial 
   Widget _crearTarjetaMisReclamos(BuildContext context) {
     final colores = Theme.of(context).colorScheme;
 

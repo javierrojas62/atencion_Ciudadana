@@ -13,8 +13,7 @@ class _DatosDashboard {
   _DatosDashboard(this.resumen, this.operarios, this.resueltos);
 }
 
-// Pestaña Dashboard: totales, resueltos por operario y los últimos
-// reclamos resueltos con sus hashes (prueba de trazabilidad).
+// Pestaña Dashboard: totales, resueltos por operario y los ultimos reclamos resueltos con sus hashes (prueba de trazabilidad).
 class DashboardTab extends StatefulWidget {
   const DashboardTab({super.key});
 

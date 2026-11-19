@@ -3,13 +3,10 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:atencion_ciudadana/src/models/categoria_model.dart';
 
 // Provider que lee las categorías de reclamo desde Supabase.
-// Están en la base (tabla categorias), así una categoría nueva
-// aparece en la app sin tocar el código.
 class CategoriasProvider {
   final _supabase = Supabase.instance.client;
 
-  // Es un Future porque la consulta no es instantánea,
-  // la pantalla lo espera con un FutureBuilder
+  // Es un Future porque la consulta no es instantánea la pantalla lo espera con un FutureBuilder
   Future<List<CategoriaModel>> cargarData() async {
     final datos = await _supabase
         .from('categorias')

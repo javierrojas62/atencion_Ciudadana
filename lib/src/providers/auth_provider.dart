@@ -45,9 +45,6 @@ class AuthProvider {
   }
 
   // Crea la cuenta de un vecino.
-  // Los datos extra viajan como metadata y la base arma el perfil sola,
-  // siempre con rol vecino (nadie puede elegir su rol al registrarse).
-  // Devuelve null si Supabase pide confirmar el email antes de entrar.
   Future<PerfilModel?> registrarVecino({
     required String nombre,
     required String apellido,
@@ -128,5 +125,5 @@ class AuthProvider {
   }
 }
 
-// Instancia que uso desde las pantallas (igual que categoriasProvider)
+// Instancia que uso desde las pantallas
 final authProvider = AuthProvider();

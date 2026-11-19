@@ -16,8 +16,6 @@ import 'package:atencion_ciudadana/src/widgets/mapa_ubicacion.dart';
 import 'package:atencion_ciudadana/src/widgets/vista_foto.dart';
 
 // Pantalla para cargar un reclamo.
-// Es la misma para todas las categorías: la categoría elegida me llega
-// como argumento de la ruta (ver routes.dart).
 class ReclamoPage extends StatefulWidget {
   final CategoriaModel categoria;
 

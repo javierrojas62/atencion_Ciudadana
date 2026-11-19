@@ -6,9 +6,6 @@ import 'package:atencion_ciudadana/src/providers/admin_provider.dart';
 import 'package:atencion_ciudadana/src/providers/barrios_provider.dart';
 
 // Formulario para crear o editar un usuario.
-// - Sin usuario: lo crea (eligiendo si es vecino u operario).
-// - Con usuario: lo edita. El rol y el email no se pueden cambiar.
-// Devuelve true al cerrarse si se guardó algo.
 class UsuarioFormDialog extends StatefulWidget {
   final UsuarioModel? usuario;
 
@@ -42,7 +39,7 @@ class _UsuarioFormDialogState extends State<UsuarioFormDialog> {
 
   late int? _barrioId = widget.usuario?.barrioId;
 
-  // Solo los barrios activos, igual que en el registro
+  // Solo los barrios activos
   late final Future<List<BarrioModel>> _barrios = barriosProvider
       .cargarActivos();
 
@@ -295,7 +292,6 @@ class _UsuarioFormDialogState extends State<UsuarioFormDialog> {
         final barrios = snapshot.data ?? [];
 
         // Si el barrio del vecino fue desactivado no está en la lista:
-        // en ese caso hay que elegir otro
         final existe = barrios.any((b) => b.id == _barrioId);
 
         return DropdownButtonFormField<int>(

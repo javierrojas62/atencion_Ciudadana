@@ -152,8 +152,6 @@ class _UsuariosTabState extends State<UsuariosTab> {
     );
   }
 
-  // En pantalla ancha (Chrome) muestro una tabla;
-  // en el celular, una tarjeta por usuario
   Widget _crearLista(List<UsuarioModel> usuarios) {
     return LayoutBuilder(
       builder: (context, constraints) {

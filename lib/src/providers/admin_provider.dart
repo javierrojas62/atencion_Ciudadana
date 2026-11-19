@@ -12,7 +12,6 @@ class AdminException implements Exception {
 }
 
 // Provider del administrador: dashboard, usuarios y barrios.
-// Nunca elimina nada: usuarios y barrios se desactivan.
 class AdminProvider {
   final _supabase = Supabase.instance.client;
 
@@ -31,8 +30,6 @@ class AdminProvider {
   }
 
   // Últimos 20 reclamos resueltos, con el operario que los resolvió.
-  // Como reclamos tiene dos relaciones con perfiles (vecino y operario),
-  // le indico a Supabase cuál usar con el nombre de la relación.
   Future<List<ReclamoResueltoModel>> ultimosResueltos() async {
     final datos = await _supabase
         .from('reclamos')
@@ -66,8 +63,6 @@ class AdminProvider {
   }
 
   // Crear un operario: primero autorizo el email (solo el admin puede)
-  // y después creo la cuenta. Al registrarse, la base ve la
-  // autorización y lo crea como operario.
   Future<void> crearOperario({
     required String nombre,
     required String apellido,

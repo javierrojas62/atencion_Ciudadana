@@ -10,9 +10,6 @@ import 'package:atencion_ciudadana/src/widgets/mapa_ubicacion.dart';
 import 'package:atencion_ciudadana/src/widgets/vista_foto.dart';
 
 // Detalle de un reclamo (vista del operario).
-// Arriba ve lo que cargó el vecino: foto, descripción y mapa.
-// Abajo realiza el trabajo: saca la foto del arreglo, agrega una
-// observación (opcional) y lo marca como realizado.
 class ReclamoDetallePage extends StatefulWidget {
   final ReclamoModel reclamo;
 

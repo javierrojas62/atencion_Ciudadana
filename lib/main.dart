@@ -16,7 +16,7 @@ void main() async {
     publishableKey: SupabaseConfig.publishableKey,
   );
 
-  // Notificaciones locales (como vimos en clase)
+  // Notificaciones locales
   await NotificationService().init();
 
   runApp(const App());
