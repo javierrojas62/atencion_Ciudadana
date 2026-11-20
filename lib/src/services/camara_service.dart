@@ -1,7 +1,7 @@
 import 'package:image_picker/image_picker.dart';
 import 'package:permission_handler/permission_handler.dart';
 
-// Los 3 estados posibles de un permiso (como vimos en clase)
+// Los 3 estados posibles de un permiso
 enum ResultadoPermiso { otorgado, denegado, denegadoPermanente }
 
 // Servicio de cámara: pide el permiso y saca la foto.
